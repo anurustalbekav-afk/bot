@@ -38,5 +38,13 @@
     return 'err.' + serverError;
   }
 
-  window.FD_AUTH = { postJson, getJson, showStatus, clearStatus, errorKey };
+  // API endpoints (PHP backend)
+  const ENDPOINTS = {
+    register: '/api/register.php',
+    login:    '/api/login.php',
+    logout:   '/api/logout.php',
+    me:       '/api/me.php',
+  };
+
+  window.FD_AUTH = { postJson, getJson, showStatus, clearStatus, errorKey, ENDPOINTS };
 })();

@@ -46,7 +46,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       window.FD_I18N.mount();
 
-      const me = await FD_AUTH.getJson('/api/me');
+      const me = await FD_AUTH.getJson(FD_AUTH.ENDPOINTS.me);
       if (!me.ok || !me.body || !me.body.ok) {
         window.location.replace('/index.html');
         return;
@@ -64,7 +64,7 @@
       }
 
       document.getElementById('logoutBtn').addEventListener('click', async () => {
-        await FD_AUTH.postJson('/api/logout', {});
+        await FD_AUTH.postJson(FD_AUTH.ENDPOINTS.logout, {});
         window.location.replace('/index.html');
       });
     });
