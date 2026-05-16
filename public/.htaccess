@@ -1,0 +1,24 @@
+# fear.dev — Apache config for the public web root.
+
+# Disable directory listing
+Options -Indexes
+
+# Default index
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Map /api/<name> -> /api/<name>.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/([a-z][a-z0-9_-]*)/?$ api/$1.php [L]
+</IfModule>
+
+# A bit of hardening: never serve hidden or backup files.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+<FilesMatch "(\.bak|\.tmp|\.log|~)$">
+    Require all denied
+</FilesMatch>

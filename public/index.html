@@ -86,7 +86,7 @@
 
       // If already authed, go straight to dashboard
       try {
-        const me = await FD_AUTH.getJson('/api/me');
+        const me = await FD_AUTH.getJson(FD_AUTH.ENDPOINTS.me);
         if (me.ok) { window.location.replace('/dashboard.html'); return; }
       } catch {}
 
@@ -101,7 +101,7 @@
         }
         submitBtn.disabled = true;
         try {
-          const r = await FD_AUTH.postJson('/api/login', { identifier, password });
+          const r = await FD_AUTH.postJson(FD_AUTH.ENDPOINTS.login, { identifier, password });
           if (r.ok && r.body && r.body.ok) {
             FD_AUTH.showStatus(statusEl, 'ok', 'ok.logged_in');
             setTimeout(() => window.location.replace('/dashboard.html'), 350);
