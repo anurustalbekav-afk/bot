@@ -1,0 +1,40 @@
+# fear.dev — Apache config for shared web hosting.
+# This file lives in the document root.
+
+# No directory listings
+Options -Indexes
+
+# Default index
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block any direct HTTP access to /src and /data
+    RewriteRule ^(src|data)(/.*)?$ - [F,L]
+
+    # Pretty API URLs: /api/<name>  ->  /api/<name>.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/([a-z][a-z0-9_-]*)/?$ api/$1.php [L]
+</IfModule>
+
+# Belt-and-suspenders: never serve hidden files, env files, or backups.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+<FilesMatch "(\.bak|\.tmp|\.log|~)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+# Tiny caching hint for static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css            "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+    ExpiresByType image/svg+xml       "access plus 30 days"
+    ExpiresByType image/x-icon        "access plus 30 days"
+</IfModule>

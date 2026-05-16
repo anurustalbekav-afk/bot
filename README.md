@@ -1,111 +1,115 @@
 # fear.dev
 
-Стартовая база для сайта продажи модов SAMP и скриптов.
-На текущем этапе реализована система авторизации.
+Сайт для продажи модов SAMP и скриптов. Сейчас здесь — авторизация и кабинет;
+дальше будет каталог, лицензии и оплата.
 
-## Стек
+Под капотом — обычный PHP-сайт без зависимостей, заливается на любой
+shared-хостинг с PHP 8.1+.
 
-- **PHP 8.1+** (используются только встроенные функции, без Composer)
-- Хранилище: JSON-файл (`data/users.json`) с file-locking — легко заменить на PDO/SQLite/MySQL
-- Хеш паролей: `password_hash` (bcrypt) + `password_verify`
-- Сессии: нативные `$_SESSION`, cookie `fd_session` (`HttpOnly`, `SameSite=Lax`)
-- Фронт: статические HTML/CSS/JS, без сборки. i18n: RU / UK / EN
+## Что нужно от хостинга
 
-## Запуск (локально)
+- PHP **8.1+** (подойдёт практически любой современный — Beget, REG.RU, Hostinger, Spaceweb, Timeweb и т.п.)
+- Apache с модулем **mod_rewrite** (включён по умолчанию у всех нормальных хостеров) — для красивых URL и защиты `/src` и `/data`
+- Возможность писать в файлы внутри домена (тоже стандартно)
 
-```bash
-cp .env.example .env
-php -S localhost:8000 -t public router.php
-# открой http://localhost:8000
-```
+База данных **не нужна** — пользователи хранятся в `data/users.json`.
+Когда наберётся аудитория, переедем на MySQL.
 
-## Запуск (production, Apache)
+## Как залить на хостинг
 
-- Корень DocumentRoot — папка `public/`
-- Файл `public/.htaccess` уже включает rewrite для `/api/<name>` → `/api/<name>.php`
-- Папка `data/` должна быть **выше** DocumentRoot или хотя бы недоступна по HTTP. По умолчанию мы кладём её рядом с `public/`, и доступ к ней Apache не маршрутизирует, потому что DocumentRoot указывает только на `public/`.
+1. Скачай (или скопируй) **всё содержимое** этой папки.
+2. По FTP/SFTP/файловому менеджеру загрузи файлы в корень сайта —
+   обычно это `public_html/`, `www/` или `htdocs/`.
+   Структура должна получиться такой:
 
-## Запуск (production, Nginx + PHP-FPM)
+   ```
+   public_html/
+   ├── index.html
+   ├── register.html
+   ├── dashboard.html
+   ├── .htaccess
+   ├── api/
+   ├── assets/
+   ├── data/             ← создастся автоматически при первом запросе
+   └── src/
+   ```
 
-Минимальный фрагмент:
+3. Открой сайт в браузере: `https://твой-домен/`.
+4. Зарегистрируй первый аккаунт. PHP сам создаст `data/users.json` и
+   `data/sessions/`. Если хостинг ругнётся на права — выстави на папку
+   домена `755`, на файлы `644`.
 
-```nginx
-server {
-    listen 80;
-    root /var/www/fear.dev/public;
-    index index.html;
-
-    # /api/<name>  ->  /api/<name>.php
-    location ~ ^/api/([a-z][a-z0-9_-]+)/?$ {
-        try_files /api/$1.php =404;
-    }
-
-    location ~ \.php$ {
-        include fastcgi_params;
-        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    }
-
-    location / { try_files $uri $uri.html $uri/ =404; }
-}
-```
-
-## Маршруты
-
-| Метод | URL                  | Описание                                     |
-|-------|----------------------|----------------------------------------------|
-| GET   | `/`                  | Страница входа                               |
-| GET   | `/register.html`     | Страница регистрации                         |
-| GET   | `/dashboard.html`    | Кабинет (требуется сессия)                   |
-| POST  | `/api/register.php`  | `{ email, login, password }` → создаёт юзера |
-| POST  | `/api/login.php`     | `{ identifier, password }` (email или login) |
-| GET   | `/api/me.php`        | Текущий пользователь                         |
-| POST  | `/api/logout.php`    | Сброс сессии                                 |
-
-## Правила валидации
-
-- email: стандартный формат (`FILTER_VALIDATE_EMAIL`), до 254 символов
-- login: 3–24 символа, `[A-Za-z0-9_]`
-- password: 8–128 символов
-
-## Безопасность
-
-- Пароли хешируются `password_hash(..., PASSWORD_BCRYPT)`
-- Сравнение через `password_verify` (constant-time)
-- При несуществующем пользователе всё равно выполняется проверка по dummy-хешу — это сглаживает таймминговый сигнал
-- Сессии: `HttpOnly`, `SameSite=Lax`, регенерация ID после login/register
-- Простой rate-limit по IP на `/api/login.php` и `/api/register.php`
+Всё. Никаких `composer install`, никаких сборок.
 
 ## Структура
 
 ```
-bot/
-├── public/                  # web root
-│   ├── index.html           # вход
-│   ├── register.html        # регистрация
-│   ├── dashboard.html       # кабинет
-│   ├── assets/              # styles.css, i18n.js, auth.js, favicon.svg
-│   ├── api/
-│   │   ├── register.php
-│   │   ├── login.php
-│   │   ├── logout.php
-│   │   └── me.php
-│   └── .htaccess
-├── src/
-│   ├── bootstrap.php        # сессии, .env, общие хелперы
-│   ├── db.php               # хранилище (JSON + flock)
-│   └── validate.php         # валидация полей
-├── data/                    # users.json + sessions/ (создаётся автоматически)
-├── router.php               # для `php -S`
-├── .env.example
-└── README.md
+.
+├── index.html               страница входа
+├── register.html            регистрация
+├── dashboard.html           кабинет
+├── .htaccess                rewrite + защита /src и /data
+├── assets/
+│   ├── styles.css           тёмная тема, glassmorphism
+│   ├── i18n.js              RU / UK / EN
+│   ├── auth.js              fetch-обёртка
+│   └── favicon.svg
+├── api/                     JSON-эндпоинты
+│   ├── register.php
+│   ├── login.php
+│   ├── logout.php
+│   └── me.php
+├── src/                     серверная логика (HTTP-доступ закрыт)
+│   ├── bootstrap.php
+│   ├── db.php
+│   └── validate.php
+└── data/                    создаётся автоматически
+    ├── .htaccess            запрет HTTP-доступа
+    ├── users.json
+    └── sessions/
 ```
 
-## Что дальше (для магазина SAMP-модов)
+## API
 
-1. Каталог товаров (`mods`, `scripts`) с категориями, медиа и ценами
-2. Привязка покупки к нику SAMP / IP / HWID — через дополнительное поле в профиле
-3. Лицензионные ключи: генерация, выдача после оплаты, проверка
-4. Платёжный шлюз (CryptoBot, ЮKassa, Stripe — что подходит юрисдикции)
-5. Админка: модерация, выпуск ключей, статистика продаж
-6. Замена JSON-хранилища на MySQL/PostgreSQL через PDO + миграции
+| Метод | URL                     | Тело                                   | Что делает                                |
+|-------|-------------------------|----------------------------------------|-------------------------------------------|
+| POST  | `/api/register.php`     | `{email, login, password}`             | создаёт пользователя и сразу логинит      |
+| POST  | `/api/login.php`        | `{identifier, password}`               | вход по email **или** логину              |
+| POST  | `/api/logout.php`       | —                                      | сброс сессии                              |
+| GET   | `/api/me.php`           | —                                      | текущий пользователь                      |
+
+Благодаря `.htaccess` те же эндпоинты работают и без `.php`:
+`/api/register`, `/api/login`, `/api/me`, `/api/logout`.
+
+## Безопасность
+
+- Пароли хешируются `password_hash()` (bcrypt), сравнение через `password_verify()`
+- При несуществующем пользователе всё равно выполняется проверка по dummy-хешу — это сглаживает таймминговый сигнал на login
+- Сессии — `HttpOnly`, `SameSite=Lax`, `session_regenerate_id(true)` после login/register (от session-fixation)
+- Запись в `users.json` атомарна, под `flock(LOCK_EX)` — нет гонок при одновременных регистрациях
+- `.htaccess` блокирует прямой HTTP-доступ к `/src`, `/data` и dotfiles
+- Простой rate-limit по IP на `/api/login.php` и `/api/register.php`
+
+> ⚠️ Когда повесишь сайт на боевой домен — обязательно настрой HTTPS
+> (на большинстве хостеров Let's Encrypt включается одной кнопкой).
+> Сессионные куки тогда поедут с флагом `Secure` автоматически.
+
+## Локальный запуск (для разработки)
+
+```bash
+php -S localhost:8000
+# открой http://localhost:8000
+```
+
+> Встроенный сервер PHP не читает `.htaccess`, поэтому локально
+> rewrite `/api/<name>` не работает — но фронтенд всегда ходит на
+> `/api/<name>.php`, так что всё работает и без него.
+
+## Что дальше
+
+1. Каталог товаров (моды/скрипты), категории, медиа, цены
+2. Привязка покупки к нику SAMP / IP / HWID
+3. Лицензионные ключи: генерация, выдача, проверка
+4. Платежи (CryptoBot / ЮKassa / Stripe — что подойдёт под аудиторию)
+5. Админка: модерация, выдача ключей, статистика продаж
+6. Когда вырастет — переезд на MySQL через PDO
