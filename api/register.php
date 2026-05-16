@@ -1,19 +1,18 @@
 <?php
-declare(strict_types=1);
 require_once __DIR__ . '/../src/bootstrap.php';
 
 fd_require_method('POST');
 
-$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
 if (!fd_rate_limit("reg:$ip", 10, 60)) {
     fd_json(429, ['ok' => false, 'error' => 'rate_limited']);
 }
 
 $body = fd_read_json_body();
 
-$email    = strtolower(trim((string)($body['email']    ?? '')));
-$login    = trim((string)($body['login']    ?? ''));
-$password = (string)($body['password'] ?? '');
+$email    = strtolower(trim((string)(isset($body['email'])    ? $body['email']    : '')));
+$login    = trim((string)(isset($body['login'])    ? $body['login']    : ''));
+$password = (string)(isset($body['password']) ? $body['password'] : '');
 
 foreach ([fd_validate_email($email), fd_validate_login($login), fd_validate_password($password)] as $err) {
     if ($err !== null) fd_json(400, ['ok' => false, 'error' => $err]);
@@ -33,9 +32,15 @@ $user = [
 try {
     fd_db_create_user($user);
 } catch (RuntimeException $e) {
-    // Race: another request just took this email/login under our feet.
     $code = $e->getMessage();
-    fd_json(409, ['ok' => false, 'error' => in_array($code, ['email_taken', 'login_taken'], true) ? $code : 'unknown']);
+    if (in_array($code, ['email_taken', 'login_taken'], true)) {
+        fd_json(409, ['ok' => false, 'error' => $code]);
+    }
+    fd_json(500, [
+        'ok'     => false,
+        'error'  => 'storage_error',
+        'detail' => (getenv('APP_DEBUG') === '1') ? $code : null,
+    ]);
 }
 
 // Sign the user in immediately

@@ -123,19 +123,15 @@
         }
 
         submitBtn.disabled = true;
-        try {
-          const r = await FD_AUTH.postJson(FD_AUTH.ENDPOINTS.register, { email, login, password });
-          if (r.ok && r.body && r.body.ok) {
-            FD_AUTH.showStatus(statusEl, 'ok', 'ok.registered');
-            setTimeout(() => window.location.replace('/dashboard.html'), 400);
-          } else {
-            FD_AUTH.showStatus(statusEl, 'error', FD_AUTH.errorKey(r.body && r.body.error));
-          }
-        } catch {
-          FD_AUTH.showStatus(statusEl, 'error', 'err.network');
-        } finally {
-          submitBtn.disabled = false;
+        const r = await FD_AUTH.postJson(FD_AUTH.ENDPOINTS.register, { email, login, password });
+        if (r.ok && r.body && r.body.ok) {
+          FD_AUTH.showStatus(statusEl, 'ok', 'ok.registered');
+          setTimeout(() => window.location.replace('/dashboard.html'), 400);
+        } else {
+          const { key, extra } = FD_AUTH.describeError(r);
+          FD_AUTH.showStatus(statusEl, 'error', key, extra);
         }
+        submitBtn.disabled = false;
       });
     });
   </script>

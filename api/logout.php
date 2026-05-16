@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 require_once __DIR__ . '/../src/bootstrap.php';
 
 fd_require_method('POST');
@@ -13,7 +12,7 @@ if (ini_get('session.use_cookies')) {
         'domain'   => $params['domain'],
         'secure'   => $params['secure'],
         'httponly' => $params['httponly'],
-        'samesite' => $params['samesite'] ?? 'Lax',
+        'samesite' => isset($params['samesite']) ? $params['samesite'] : 'Lax',
     ]);
 }
 @session_destroy();

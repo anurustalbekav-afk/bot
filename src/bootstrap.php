@@ -1,40 +1,101 @@
 <?php
-declare(strict_types=1);
-
 /**
  * fear.dev — common bootstrap for every PHP entry point.
  *
+ * Compatible with PHP 7.4+ so it runs on cheap shared hosting that hasn't
+ * been upgraded to PHP 8 yet.
+ *
  * Responsibilities:
+ *   - turn ANY error/exception into a JSON response (no white screens)
  *   - load .env (no external deps)
  *   - configure paths and ensure the data dir exists
  *   - configure and start the session (HttpOnly, SameSite=Lax)
  *   - expose helpers used by the JSON API endpoints
  */
 
+// --- error handling: never leak HTML error pages to the JSON client ---------
+
+if (!function_exists('fd_send_json_raw')) {
+    function fd_send_json_raw($status, array $data) {
+        if (!headers_sent()) {
+            http_response_code($status);
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-store');
+        }
+        echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+}
+
+set_error_handler(function ($severity, $message, $file, $line) {
+    // Respect the @-operator
+    if (!(error_reporting() & $severity)) return false;
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+set_exception_handler(function ($e) {
+    error_log('[fear.dev] ' . $e);
+    fd_send_json_raw(500, [
+        'ok'    => false,
+        'error' => 'server_error',
+        'detail' => (getenv('APP_DEBUG') === '1') ? $e->getMessage() : null,
+    ]);
+});
+
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR], true)) {
+        if (!headers_sent()) {
+            fd_send_json_raw(500, [
+                'ok'     => false,
+                'error'  => 'server_error',
+                'detail' => (getenv('APP_DEBUG') === '1') ? $err['message'] : null,
+            ]);
+        }
+    }
+});
+
+// --- PHP version guard ------------------------------------------------------
+
+if (PHP_VERSION_ID < 70400) {
+    fd_send_json_raw(500, ['ok' => false, 'error' => 'php_too_old', 'detail' => 'PHP ' . PHP_VERSION . ' < 7.4']);
+    exit;
+}
+
 // --- paths ------------------------------------------------------------------
 
-define('FD_ROOT',     dirname(__DIR__));
-define('FD_DATA_DIR', FD_ROOT . '/data');
-define('FD_USERS_FILE', FD_DATA_DIR . '/users.json');
-define('FD_SESSIONS_DIR', FD_DATA_DIR . '/sessions');
+if (!defined('FD_ROOT'))         define('FD_ROOT',         dirname(__DIR__));
+if (!defined('FD_DATA_DIR'))     define('FD_DATA_DIR',     FD_ROOT . '/data');
+if (!defined('FD_USERS_FILE'))   define('FD_USERS_FILE',   FD_DATA_DIR . '/users.json');
+if (!defined('FD_SESSIONS_DIR')) define('FD_SESSIONS_DIR', FD_DATA_DIR . '/sessions');
 
 if (!is_dir(FD_DATA_DIR))     { @mkdir(FD_DATA_DIR, 0775, true); }
 if (!is_dir(FD_SESSIONS_DIR)) { @mkdir(FD_SESSIONS_DIR, 0775, true); }
 
-// --- .env loader (very small, no deps) --------------------------------------
+if (!is_dir(FD_DATA_DIR) || !is_writable(FD_DATA_DIR)) {
+    fd_send_json_raw(500, [
+        'ok'     => false,
+        'error'  => 'data_dir_not_writable',
+        'detail' => 'PHP cannot write to ' . FD_DATA_DIR . '. Set permissions to 755 (or 775).',
+    ]);
+    exit;
+}
 
-(function (): void {
+// --- .env loader (very small, no deps; PHP 7.4 compatible) ------------------
+
+(function () {
     $envFile = FD_ROOT . '/.env';
     if (!is_file($envFile)) return;
-    $lines = @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+    $lines = @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!$lines) return;
     foreach ($lines as $line) {
         $line = trim($line);
         if ($line === '' || $line[0] === '#') continue;
         if (!preg_match('/^([A-Z0-9_]+)\s*=\s*(.*)$/i', $line, $m)) continue;
         $k = $m[1];
         $v = trim($m[2]);
-        if ((str_starts_with($v, '"') && str_ends_with($v, '"'))
-            || (str_starts_with($v, "'") && str_ends_with($v, "'"))) {
+        $first = $v !== '' ? $v[0] : '';
+        $last  = $v !== '' ? substr($v, -1) : '';
+        if (($first === '"' && $last === '"') || ($first === "'" && $last === "'")) {
             $v = substr($v, 1, -1);
         }
         if (getenv($k) === false) {
@@ -50,6 +111,8 @@ if (session_status() === PHP_SESSION_NONE) {
     $ttl = (int)(getenv('SESSION_TTL') ?: 60 * 60 * 24 * 7); // 7 days
     @session_save_path(FD_SESSIONS_DIR);
     session_name('fd_session');
+
+    // session_set_cookie_params with array signature requires PHP 7.3+
     session_set_cookie_params([
         'lifetime' => $ttl,
         'path'     => '/',
@@ -58,9 +121,9 @@ if (session_status() === PHP_SESSION_NONE) {
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
-    ini_set('session.gc_maxlifetime', (string)$ttl);
-    ini_set('session.use_strict_mode', '1');
-    session_start();
+    @ini_set('session.gc_maxlifetime', (string)$ttl);
+    @ini_set('session.use_strict_mode', '1');
+    @session_start();
 }
 
 require_once __DIR__ . '/db.php';
