@@ -1,0 +1,16 @@
+{
+  "name": "fear-dev",
+  "version": "0.1.0",
+  "description": "fear.dev — auth panel and foundation for SAMP mods marketplace",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}
