@@ -1,0 +1,2 @@
+# Block all HTTP access to user data and sessions.
+Require all denied

@@ -1,5 +1,10 @@
-node_modules/
-data/
+# Runtime user data: never commit
+data/users.json
+data/sessions/
+
+# Local env
 .env
+
+# Misc
 *.log
 .DS_Store

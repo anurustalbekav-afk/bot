@@ -1,0 +1,2 @@
+# Block all HTTP access to PHP source files in this directory.
+Require all denied
