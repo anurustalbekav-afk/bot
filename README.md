@@ -79,16 +79,48 @@ cp config.example.php config.php
 
 ## Маршруты
 
-| Метод | URL                  | Описание                                    |
-|-------|----------------------|---------------------------------------------|
-| GET   | `/`                  | Редирект на `/login.php` или `/dashboard.php` |
-| GET   | `/login.php`         | Страница входа                              |
-| GET   | `/register.php`      | Страница регистрации                        |
-| GET   | `/dashboard.php`     | Кабинет (требуется сессия)                  |
-| POST  | `/api/register.php`  | `{ email, login, password }`                |
-| POST  | `/api/login.php`     | `{ identifier, password }` (email или login) |
-| GET   | `/api/me.php`        | Текущий пользователь                        |
-| POST  | `/api/logout.php`    | Сброс сессии                                |
+| Метод | URL                       | Описание                                       |
+|-------|---------------------------|------------------------------------------------|
+| GET   | `/`                       | Редирект на `/login.php` или `/dashboard.php`  |
+| GET   | `/login.php`              | Страница входа                                 |
+| GET   | `/register.php`           | Страница регистрации                           |
+| GET   | `/dashboard.php`          | Кабинет (требуется сессия)                     |
+| GET   | `/admin.php`              | Админка (только для `role = 'admin'`)          |
+| POST  | `/api/register.php`       | `{ email, login, password }`                   |
+| POST  | `/api/login.php`          | `{ identifier, password }` (email или login)   |
+| GET   | `/api/me.php`             | Текущий пользователь                           |
+| POST  | `/api/logout.php`         | Сброс сессии                                   |
+| GET   | `/api/admin/users.php`    | Список пользователей (`?search=&limit=&offset=`) |
+| POST  | `/api/admin/role.php`     | `{ id, role }` — изменить роль                 |
+| POST  | `/api/admin/delete.php`   | `{ id }` — удалить пользователя                |
+
+## Роли и админка
+
+В таблице `users` есть поле `role` со значениями `user` (по умолчанию) или `admin`.
+
+### Выдать первого админа
+
+С веба нельзя — некому нажать кнопку. Два способа:
+
+**Через CLI (локально):**
+```bash
+php scripts/grant-admin.php твой_логин
+php scripts/grant-admin.php --list             # посмотреть всех админов
+php scripts/grant-admin.php твой_логин --revoke # снять
+```
+
+**Через phpMyAdmin (вкладка SQL):**
+```sql
+UPDATE users SET role = 'admin' WHERE login = 'твой_логин';
+```
+
+После этого зайди на сайт — на дашборде появится кнопка «Админка», в шапке таблицы — поиск, в строках — селект для смены роли и кнопка удаления.
+
+### Защита от lock-out
+
+- Админ не может снять админку с самого себя через веб (только через CLI или phpMyAdmin).
+- Нельзя удалить самого себя.
+- Нельзя удалить последнего админа в системе.
 
 ## Схема БД
 
@@ -98,10 +130,12 @@ CREATE TABLE users (
   email         VARCHAR(254)  NOT NULL,
   login         VARCHAR(24)   NOT NULL,
   password_hash VARCHAR(255)  NOT NULL,
+  role          VARCHAR(16)   NOT NULL DEFAULT 'user',
   created_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uk_users_email (email),
-  UNIQUE KEY uk_users_login (login)
+  UNIQUE KEY uk_users_login (login),
+  KEY idx_users_role (role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 

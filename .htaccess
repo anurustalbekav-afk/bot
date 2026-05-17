@@ -9,9 +9,10 @@
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Закрываем lib/ и sql/ извне
-    RewriteRule ^lib/.*  - [F,L]
-    RewriteRule ^sql/.*  - [F,L]
+    # Закрываем lib/, sql/, scripts/ извне
+    RewriteRule ^lib/.*      - [F,L]
+    RewriteRule ^sql/.*      - [F,L]
+    RewriteRule ^scripts/.*  - [F,L]
 </IfModule>
 
 # Корректные кодировки и кэш для статики

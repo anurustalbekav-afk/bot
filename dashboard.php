@@ -14,6 +14,8 @@ $h = static fn (string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 $loginEsc = $h($user['login']);
 $emailEsc = $h($user['email']);
 $idEsc    = $h($user['id']);
+$roleEsc  = $h($user['role'] ?? 'user');
+$isAdmin  = Auth::isAdmin($user);
 $created  = $user['created_at'] ?? '';
 $ts       = $created ? strtotime($created . ' UTC') : false;
 $createdIso = $ts !== false ? gmdate('Y-m-d\TH:i:s\Z', $ts) : $h($created);
@@ -44,10 +46,14 @@ $createdIso = $ts !== false ? gmdate('Y-m-d\TH:i:s\Z', $ts) : $h($created);
         <div class="cell"><div class="k" data-i18n="dash.email">Email</div><div class="v"><?= $emailEsc ?></div></div>
         <div class="cell"><div class="k" data-i18n="dash.login">Логин</div><div class="v"><?= $loginEsc ?></div></div>
         <div class="cell"><div class="k" data-i18n="dash.id">ID</div><div class="v"><?= $idEsc ?></div></div>
+        <div class="cell"><div class="k" data-i18n="dash.role">Роль</div><div class="v"><?= $roleEsc ?><?= $isAdmin ? ' <span style="color:#d6b6ff;font-size:11px">★</span>' : '' ?></div></div>
         <div class="cell"><div class="k" data-i18n="dash.created">Регистрация</div><div class="v" id="userCreated" data-iso="<?= $createdIso ?>"><?= $createdIso ?></div></div>
       </div>
 
       <div class="actions">
+        <?php if ($isAdmin): ?>
+        <a href="/admin.php" class="btn btn-primary" data-i18n="btn.admin" style="text-decoration:none">Админка</a>
+        <?php endif; ?>
         <button id="logoutBtn" class="btn btn-ghost" data-i18n="btn.logout">Выйти</button>
       </div>
 

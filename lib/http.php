@@ -85,6 +85,7 @@ function public_user(array $row): array
         'id'        => $row['id'],
         'email'     => $row['email'],
         'login'     => $row['login'],
+        'role'      => $row['role'] ?? DB::ROLE_USER,
         'createdAt' => $created,
     ];
 }

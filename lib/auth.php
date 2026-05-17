@@ -105,6 +105,39 @@ final class Auth
         return $p['sub'] ?? null;
     }
 
+    /**
+     * Текущий пользователь из БД (или null). Свежее чтение каждый раз —
+     * ленится не стоит, прав в куке мы не храним, чтобы повышение/снятие
+     * роли вступало в силу немедленно, без перелогина.
+     */
+    public static function currentUser(): ?array
+    {
+        $uid = self::currentUserId();
+        if (!$uid) return null;
+        return DB::findById($uid);
+    }
+
+    public static function isAdmin(?array $user): bool
+    {
+        return is_array($user) && ($user['role'] ?? '') === DB::ROLE_ADMIN;
+    }
+
+    /**
+     * Ограждает API-эндпоинты для админов. При неудаче — отвечает JSON и exit.
+     * Возвращает текущего админа, чтобы вызывающий код не ходил в БД повторно.
+     */
+    public static function requireAdminOrFail(): array
+    {
+        $user = self::currentUser();
+        if (!$user) {
+            json_response(401, ['ok' => false, 'error' => 'unauthorized']);
+        }
+        if (!self::isAdmin($user)) {
+            json_response(403, ['ok' => false, 'error' => 'forbidden']);
+        }
+        return $user;
+    }
+
     private static function b64url(string $bin): string
     {
         return rtrim(strtr(base64_encode($bin), '+/', '-_'), '=');
