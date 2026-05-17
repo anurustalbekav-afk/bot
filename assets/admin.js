@@ -1,27 +1,26 @@
-// fear.dev — admin panel client
+// fear.dev — админ-страница пользователей
 (function () {
   const PAGE_SIZE = 25;
   const $ = (id) => document.getElementById(id);
-
-  let state = { offset: 0, search: '', total: 0, debounce: null };
-
   const t = (k) => window.FD_I18N && window.FD_I18N.t ? window.FD_I18N.t(k) : k;
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[c]));
 
+  let state = { offset: 0, search: '', total: 0, debounce: null };
+
   function setStatus(kind, key) {
     const el = $('status');
     if (!key) { el.textContent = ''; el.className = 'status'; return; }
     el.textContent = t(key);
-    el.className = 'status ' + (kind === 'error' ? 'error' : 'ok');
+    el.className = 'status show ' + (kind === 'error' ? 'error' : 'ok');
   }
 
   async function load() {
     setStatus(null, null);
     const q = new URLSearchParams({
       search: state.search,
-      limit: String(PAGE_SIZE),
+      limit:  String(PAGE_SIZE),
       offset: String(state.offset),
     });
     try {
@@ -52,7 +51,7 @@
     }
 
     $('totalCount').textContent = (t('admin.total') || 'Всего:') + ' ' + state.total;
-    const page = Math.floor(state.offset / PAGE_SIZE) + 1;
+    const page  = Math.floor(state.offset / PAGE_SIZE) + 1;
     const pages = Math.max(1, Math.ceil(state.total / PAGE_SIZE));
     $('pageInfo').textContent = page + ' / ' + pages;
     $('prevBtn').disabled = state.offset <= 0;
@@ -65,20 +64,21 @@
     const roleClass = u.role === 'admin' ? 'role-admin' : 'role-user';
     return `
       <tr data-id="${esc(u.id)}" data-role="${esc(u.role)}">
-        <td><strong>${esc(u.login)}</strong>${isMe ? ' <span style="color:#888;font-size:11px">(' + esc(t('admin.you') || 'вы') + ')</span>' : ''}</td>
+        <td>
+          <strong>${esc(u.login)}</strong>
+          ${isMe ? '<span class="muted">' + esc(t('admin.you') || 'вы') + '</span>' : ''}
+        </td>
         <td>${esc(u.email)}</td>
         <td>
-          <span class="role-badge ${roleClass}">${esc(u.role)}</span>
-          <select data-action="role" ${isMe ? 'disabled title="' + esc(t('err.cannot_demote_self')) + '"' : ''}>
+          <span class="pill ${roleClass}">${esc(u.role)}</span>
+          <select data-action="role" ${isMe ? 'disabled title="' + esc(t('err.cannot_demote_self')) + '"' : ''} style="margin-left:6px">
             <option value="user"${u.role === 'user' ? ' selected' : ''}>user</option>
             <option value="admin"${u.role === 'admin' ? ' selected' : ''}>admin</option>
           </select>
         </td>
         <td>${esc(created)}</td>
         <td>
-          <button class="danger" data-action="delete" ${isMe ? 'disabled' : ''}>
-            ${esc(t('admin.delete') || 'Удалить')}
-          </button>
+          <button class="icon-btn danger" data-action="delete" ${isMe ? 'disabled' : ''} title="${esc(t('admin.delete') || 'Удалить')}">🗑</button>
         </td>
       </tr>`;
   }
@@ -126,8 +126,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    window.FD_I18N.mount();
-
     $('search').addEventListener('input', (e) => {
       clearTimeout(state.debounce);
       state.debounce = setTimeout(() => {
@@ -136,7 +134,6 @@
         load();
       }, 250);
     });
-
     $('prevBtn').addEventListener('click', () => {
       state.offset = Math.max(0, state.offset - PAGE_SIZE);
       load();
@@ -145,7 +142,6 @@
       state.offset += PAGE_SIZE;
       load();
     });
-
     load();
   });
 })();
