@@ -41,10 +41,11 @@ $result = fd_user_buy_atomic($user['id'], [
 
 if (isset($result['error'])) {
     $status = match ($result['error']) {
-        'insufficient_funds'    => 402,
-        'user_not_found'        => 404,
+        'insufficient_funds'     => 402,
+        'already_purchased'      => 409,
+        'user_not_found'         => 404,
         'purchase_price_invalid' => 400,
-        default                 => 400,
+        default                  => 400,
     };
     fd_json_response($status, ['ok' => false] + $result);
 }

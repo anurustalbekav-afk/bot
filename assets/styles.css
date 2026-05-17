@@ -505,6 +505,13 @@ body.catalog-body, body.dash-body { display: block; min-height: 100vh; }
 .cat-tabs { flex-wrap: wrap; }
 .cat-card { cursor: pointer; }
 .cat-card .mod-body { gap: 10px; }
+.cat-card.is-owned { border-color: rgba(52, 211, 153, 0.35); }
+.mod-pill-owned {
+  left: auto; right: 10px;
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(52, 211, 153, 0.45);
+  color: #c9f7e3;
+}
 
 /* Account balance pill in the top bar */
 .adm-balance {

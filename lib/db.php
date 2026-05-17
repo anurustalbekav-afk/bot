@@ -206,6 +206,19 @@ function fd_user_buy_atomic(string $userId, array $entry): array
             if ($price < 0) {
                 return [['error' => 'purchase_price_invalid'], null];
             }
+
+            // Block duplicate purchases of the same mod by the same user.
+            // This is checked under the same lock as the write, so two parallel
+            // buy requests can never both succeed.
+            $modId = $entry['modId'] ?? null;
+            if ($modId) {
+                foreach ($u['purchases'] as $p) {
+                    if (($p['modId'] ?? null) === $modId) {
+                        return [['error' => 'already_purchased'], null];
+                    }
+                }
+            }
+
             if (round($balance, 2) + 0.0001 < $price) {
                 return [
                     [
@@ -216,10 +229,6 @@ function fd_user_buy_atomic(string $userId, array $entry): array
                     null,
                 ];
             }
-
-            // Idempotency-by-mod is intentionally NOT enforced here: a user
-            // may buy the same mod twice (e.g. for a friend) — that's a
-            // product decision and easy to add later if we change our mind.
 
             $record = [
                 'id'        => fd_uuid(),

@@ -38,7 +38,7 @@ $pub = fd_public_user($user);
     <div class="adm-top-right">
       <div class="lang-switch" role="tablist" aria-label="Language">
         <button type="button" data-lang-btn="ru">RU</button>
-        <button type="button" data-lang-btn="uk">UK</button>
+        <button type="button" data-lang-btn="be">BE</button>
         <button type="button" data-lang-btn="en">EN</button>
       </div>
       <span class="adm-balance" id="dashBalance"

@@ -16,6 +16,7 @@
     mods: [],
     filter: 'all',
     me: null,             // { id, login, isAdmin, balance, ... } or null for guests
+    ownedModIds: new Set(), // mods the current user has already bought
     activeMod: null,
   };
 
@@ -86,6 +87,16 @@
     const r = await FD_AUTH.getJson('/api/me.php');
     state.me = (r.ok && r.body && r.body.ok) ? r.body.user : null;
     updateBalanceBadge();
+    if (state.me) await loadOwned();
+  }
+
+  async function loadOwned() {
+    const r = await FD_AUTH.getJson('/api/purchases.php');
+    state.ownedModIds = new Set(
+      ((r.body && r.body.ok && r.body.purchases) || [])
+        .map((p) => p.modId)
+        .filter(Boolean),
+    );
   }
 
   function updateBalanceBadge() {
@@ -116,21 +127,23 @@
 
     for (const m of filtered) {
       const fallbackChar = (m.title || '?').slice(0, 1).toUpperCase();
+      const owned = state.ownedModIds.has(m.id);
       const card = document.createElement('article');
-      card.className = 'mod-card cat-card';
+      card.className = 'mod-card cat-card' + (owned ? ' is-owned' : '');
       card.dataset.modId = m.id;
       card.innerHTML = `
         <div class="mod-banner">
           ${m.banner ? `<img alt="" loading="lazy" src="${escape(m.banner)}" data-fallback="${escape(fallbackChar)}" />`
                      : `<div class="mod-banner-fallback">${escape(fallbackChar)}</div>`}
           <span class="mod-pill">${escape(m.type === 'script' ? t('catalog.kind.script') : t('catalog.kind.mod'))}</span>
+          ${owned ? `<span class="mod-pill mod-pill-owned">${escape(t('catalog.owned'))}</span>` : ''}
         </div>
         <div class="mod-body">
           <h4 class="mod-title">${escape(m.title)}</h4>
           <div class="mod-row">
             <span class="mod-price">${escape(formatMoney(m.price, m.currency))}</span>
             <button type="button" class="btn btn-primary btn-sm" data-mod-view="${escape(m.id)}">
-              ${escape(t('catalog.btn.view'))}
+              ${escape(t(owned ? 'catalog.btn.open' : 'catalog.btn.view'))}
             </button>
           </div>
         </div>
@@ -178,9 +191,17 @@
       descEl.textContent = '';
     }
 
+    // Swap the "Buy" CTA for "Download" when this mod is already owned.
     const buyBtn = $('#detailsBuyBtn');
     buyBtn.disabled = false;
     buyBtn.dataset.modId = m.id;
+    if (state.ownedModIds.has(m.id)) {
+      buyBtn.textContent = t('dash.purchase.download');
+      buyBtn.dataset.action = 'download';
+    } else {
+      buyBtn.textContent = t('catalog.btn.buy');
+      buyBtn.dataset.action = 'buy';
+    }
 
     openModal('detailsModal');
   }
@@ -223,11 +244,21 @@
         return;
       }
       if (r.ok && r.body && r.body.ok) {
-        // Update balance locally, close, toast.
+        // Update balance + owned set locally, close modal, toast.
         state.me.balance = r.body.balance;
+        if (mod.id) state.ownedModIds.add(mod.id);
         updateBalanceBadge();
         closeModal('detailsModal');
         toast('ok', 'catalog.toast.purchased');
+        render();
+        return;
+      }
+      if (r.status === 409 && r.body && r.body.error === 'already_purchased') {
+        // Server says we already own it — sync local set and switch to download.
+        if (mod.id) state.ownedModIds.add(mod.id);
+        render();
+        // Reopen details so the button label switches to "Download".
+        openDetails(mod.id);
         return;
       }
       toast('error', FD_AUTH.errorKey(r.body && r.body.error));
@@ -241,7 +272,13 @@
   $('#detailsBuyBtn').addEventListener('click', (e) => {
     e.preventDefault();
     const m = state.activeMod;
-    if (m) buy(m);
+    if (!m) return;
+    // "Download" mode: just open the mod URL in a new tab.
+    if (e.currentTarget.dataset.action === 'download') {
+      if (m.url) window.open(m.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    buy(m);
   });
 
   // --- payment / insufficient-funds modal ---------------------------------
