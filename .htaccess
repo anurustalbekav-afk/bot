@@ -51,9 +51,11 @@ RedirectMatch 404 (?i)/\.(env|git|htaccess|htpasswd|DS_Store)(/|$)
   <FilesMatch "\.(php|html?)$">
     Header set Cache-Control "no-store, max-age=0"
   </FilesMatch>
-  # Long cache for static assets (cache-bust by changing filename).
+  # Static assets get a moderate cache. PHP templates append `?v=<mtime>` to
+  # every <link>/<script> URL via fd_asset(), so changing a file invalidates
+  # the cache immediately even with a long max-age.
   <FilesMatch "\.(css|js|svg|png|jpg|jpeg|webp|woff2?)$">
-    Header set Cache-Control "public, max-age=31536000, immutable"
+    Header set Cache-Control "public, max-age=2592000"
   </FilesMatch>
 </IfModule>
 

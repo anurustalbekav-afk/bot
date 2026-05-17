@@ -13,7 +13,7 @@ $pub = fd_public_user($user);
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n-title="meta.title.admin">fear.dev — Админка</title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="/assets/styles.css" />
+  <link rel="stylesheet" href="<?= fd_e(fd_asset('/assets/styles.css')) ?>" />
 </head>
 <body class="admin-body">
   <header class="adm-top">
@@ -135,8 +135,8 @@ $pub = fd_public_user($user);
     </div>
   </div>
 
-  <script src="/assets/i18n.js"></script>
-  <script src="/assets/auth.js"></script>
-  <script src="/assets/admin.js"></script>
+  <script src="<?= fd_e(fd_asset('/assets/i18n.js')) ?>"></script>
+  <script src="<?= fd_e(fd_asset('/assets/auth.js')) ?>"></script>
+  <script src="<?= fd_e(fd_asset('/assets/admin.js')) ?>"></script>
 </body>
 </html>

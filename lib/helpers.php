@@ -105,3 +105,15 @@ function fd_e(?string $s): string
 {
     return htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
+
+/**
+ * Return a path with a `?v=<mtime>` cache-buster appended. Use it for every
+ * <link rel="stylesheet"> and <script src> to make sure browsers don't keep
+ * showing a stale UI after we deploy new assets.
+ */
+function fd_asset(string $relPath): string
+{
+    $abs = FD_ROOT . $relPath;
+    $v = @filemtime($abs);
+    return $v ? $relPath . '?v=' . $v : $relPath;
+}

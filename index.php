@@ -14,7 +14,7 @@ if (fd_current_user()) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n-title="meta.title.login">fear.dev — Вход</title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="/assets/styles.css" />
+  <link rel="stylesheet" href="<?= fd_e(fd_asset('/assets/styles.css')) ?>" />
 </head>
 <body>
   <div class="topbar">
@@ -83,8 +83,8 @@ if (fd_current_user()) {
     </section>
   </main>
 
-  <script src="/assets/i18n.js"></script>
-  <script src="/assets/auth.js"></script>
-  <script src="/assets/page-login.js"></script>
+  <script src="<?= fd_e(fd_asset('/assets/i18n.js')) ?>"></script>
+  <script src="<?= fd_e(fd_asset('/assets/auth.js')) ?>"></script>
+  <script src="<?= fd_e(fd_asset('/assets/page-login.js')) ?>"></script>
 </body>
 </html>
