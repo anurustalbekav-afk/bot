@@ -7,54 +7,59 @@ $categories = DB::listCategories();
 
 layout_head('meta.title.admin', 'fear.dev — Админка', $me);
 ?>
-<main class="adm-shell">
-  <?php admin_sidebar('products'); ?>
-  <section class="adm-main">
-    <div class="adm-head">
-      <h1 data-i18n="admin.products.title">Товары</h1>
-      <button type="button" id="newProductBtn" class="btn btn-primary" data-i18n="admin.products.new">Новый товар</button>
-    </div>
+<main class="shell-page">
+  <div class="section-head">
+    <h1 data-i18n="admin.products.title">Товары</h1>
+    <p class="sub" data-i18n="admin.subtitle">Создание, редактирование и публикация товаров.</p>
+  </div>
 
-    <div class="toolbar">
-      <input type="search" id="search" data-i18n-placeholder="admin.products.search" placeholder="Поиск" />
-      <select id="filterStatus">
-        <option value=""           data-i18n="admin.products.status.any">Любой статус</option>
-        <option value="published"  data-i18n="admin.products.status.published">Опубликован</option>
-        <option value="draft"      data-i18n="admin.products.status.draft">Черновик</option>
-      </select>
-      <select id="filterCategory">
-        <option value="" data-i18n="admin.products.cat.any">Все категории</option>
-        <?php foreach ($categories as $c): ?>
-          <option value="<?= htmlspecialchars($c['slug'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($c['title'], ENT_QUOTES, 'UTF-8') ?></option>
-        <?php endforeach; ?>
-      </select>
-      <span id="totalCount"></span>
-    </div>
+  <div class="adm-layout">
+    <?php admin_sidebar('products'); ?>
+    <section class="panel adm-main">
+      <div class="adm-head">
+        <div class="adm-toolbar" style="margin-bottom:0; flex:1">
+          <input type="search" id="search" data-i18n-placeholder="admin.products.search" placeholder="Поиск" />
+          <select id="filterStatus">
+            <option value=""           data-i18n="admin.products.status.any">Любой статус</option>
+            <option value="published"  data-i18n="admin.products.status.published">Опубликован</option>
+            <option value="draft"      data-i18n="admin.products.status.draft">Черновик</option>
+          </select>
+          <select id="filterCategory">
+            <option value="" data-i18n="admin.products.cat.any">Все категории</option>
+            <?php foreach ($categories as $c): ?>
+              <option value="<?= htmlspecialchars($c['slug'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($c['title'], ENT_QUOTES, 'UTF-8') ?></option>
+            <?php endforeach; ?>
+          </select>
+          <span class="total" id="totalCount"></span>
+        </div>
+        <button type="button" id="newProductBtn" class="btn btn-primary" data-i18n="admin.products.new" style="margin-left:12px">Новый товар</button>
+      </div>
 
-    <div id="status" class="status" role="status" aria-live="polite"></div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
 
-    <table class="adm-table">
-      <thead>
-        <tr>
-          <th data-i18n="admin.products.col.title">Название</th>
-          <th data-i18n="admin.products.col.category">Категория</th>
-          <th data-i18n="admin.products.col.price">Цена</th>
-          <th data-i18n="admin.products.col.status">Статус</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="productRows"></tbody>
-    </table>
+      <table class="adm-table">
+        <thead>
+          <tr>
+            <th data-i18n="admin.products.col.title">Название</th>
+            <th data-i18n="admin.products.col.category">Категория</th>
+            <th data-i18n="admin.products.col.price">Цена</th>
+            <th data-i18n="admin.products.col.status">Статус</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="productRows"></tbody>
+      </table>
 
-    <div class="pager">
-      <button id="prevBtn" type="button">←</button>
-      <span id="pageInfo">1</span>
-      <button id="nextBtn" type="button">→</button>
-    </div>
-  </section>
+      <div class="pager">
+        <button id="prevBtn" type="button">←</button>
+        <span id="pageInfo">1</span>
+        <button id="nextBtn" type="button">→</button>
+      </div>
+    </section>
+  </div>
 </main>
 
-<!-- Модалка для создания/редактирования -->
+<!-- Модалка создания/редактирования -->
 <div id="productModal" class="modal" hidden>
   <div class="modal-box">
     <button type="button" class="modal-close" id="modalClose" aria-label="Close">×</button>
@@ -86,7 +91,7 @@ layout_head('meta.title.admin', 'fear.dev — Админка', $me);
           <span data-i18n="admin.products.col.price">Цена</span>
           <input type="number" name="price" min="0" step="0.01" value="0" />
         </label>
-        <label>
+        <label style="max-width:120px">
           <span data-i18n="admin.products.col.currency">Валюта</span>
           <select name="currency">
             <option>USD</option><option>EUR</option><option>RUB</option><option>UAH</option>
@@ -105,7 +110,7 @@ layout_head('meta.title.admin', 'fear.dev — Админка', $me);
         <span data-i18n="admin.products.col.description">Описание</span>
         <textarea name="description" rows="6"></textarea>
       </label>
-      <label>
+      <label style="max-width:240px">
         <span data-i18n="admin.products.col.status">Статус</span>
         <select name="status">
           <option value="draft"     data-i18n="admin.products.status.draft">Черновик</option>
@@ -125,7 +130,6 @@ layout_head('meta.title.admin', 'fear.dev — Админка', $me);
 
 <script>
   window.FD_OPEN_NEW = <?= !empty($_GET['new']) ? 'true' : 'false' ?>;
-  window.FD_CATEGORIES = <?= json_encode(array_map(static fn ($c) => ['id' => (int)$c['id'], 'slug' => $c['slug'], 'title' => $c['title']], $categories), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 </script>
 <script src="/assets/admin-products.js"></script>
 <?php layout_foot(); ?>

@@ -31,7 +31,7 @@ layout_head('meta.title.dashboard', 'fear.dev — Панель', $user);
       <div class="cell"><div class="k" data-i18n="dash.email">Email</div><div class="v"><?= $emailEsc ?></div></div>
       <div class="cell"><div class="k" data-i18n="dash.login">Логин</div><div class="v"><?= $loginEsc ?></div></div>
       <div class="cell"><div class="k" data-i18n="dash.id">ID</div><div class="v"><?= $idEsc ?></div></div>
-      <div class="cell"><div class="k" data-i18n="dash.role">Роль</div><div class="v"><?= $roleEsc ?><?= $isAdmin ? ' <span style="color:#d6b6ff;font-size:11px">★</span>' : '' ?></div></div>
+      <div class="cell"><div class="k" data-i18n="dash.role">Роль</div><div class="v"><?= $roleEsc ?><?= $isAdmin ? ' ★' : '' ?></div></div>
       <div class="cell"><div class="k" data-i18n="dash.created">Регистрация</div><div class="v" id="userCreated" data-iso="<?= $createdIso ?>"><?= $createdIso ?></div></div>
     </div>
 

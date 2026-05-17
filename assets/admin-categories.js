@@ -10,7 +10,7 @@
     const el = $('status');
     if (!key) { el.textContent = ''; el.className = 'status'; return; }
     el.textContent = t(key);
-    el.className = 'status ' + (kind === 'error' ? 'error' : 'ok');
+    el.className = 'status show ' + (kind === 'error' ? 'error' : 'ok');
   }
 
   async function load() {
@@ -36,8 +36,8 @@
         <td><input data-field="slug"  value="${esc(c.slug)}" /></td>
         <td><input data-field="position" type="number" value="${c.position}" style="width:80px" /></td>
         <td>
-          <button class="btn btn-ghost" data-action="save">💾</button>
-          <button class="danger" data-action="delete">🗑</button>
+          <button class="icon-btn" data-action="save" title="${esc(t('admin.btn.save'))}">💾</button>
+          <button class="icon-btn danger" data-action="delete" title="${esc(t('admin.delete'))}">🗑</button>
         </td>
       </tr>
     `).join('');

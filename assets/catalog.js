@@ -8,12 +8,12 @@
   }[c]));
 
   const state = {
-    category: '',
-    search:   '',
-    sort:     'new',
-    offset:   0,
-    total:    0,
-    debounce: null,
+    category:   '',
+    search:     '',
+    sort:       'new',
+    offset:     0,
+    total:      0,
+    debounce:   null,
     categories: [],
   };
 
@@ -21,12 +21,12 @@
     const el = $('status');
     if (!key) { el.textContent = ''; el.className = 'status'; return; }
     el.textContent = t(key);
-    el.className = 'status ' + (kind === 'error' ? 'error' : 'ok');
+    el.className = 'status show ' + (kind === 'error' ? 'error' : 'ok');
   }
 
   function fmtPrice(cents, currency) {
     const v = (cents / 100).toFixed(2);
-    return v + ' ' + currency;
+    return v + ' <span class="cur">' + esc(currency) + '</span>';
   }
 
   async function loadCategories() {
@@ -71,8 +71,8 @@
   async function loadProducts() {
     setStatus(null, null);
     const q = new URLSearchParams({
-      sort: state.sort,
-      limit: String(PAGE_SIZE),
+      sort:   state.sort,
+      limit:  String(PAGE_SIZE),
       offset: String(state.offset),
     });
     if (state.category) q.set('category', state.category);
@@ -95,7 +95,7 @@
   function render(products) {
     const grid = $('productsGrid');
     if (!products.length) {
-      grid.innerHTML = '<div class="empty" data-i18n="catalog.empty">' + esc(t('catalog.empty')) + '</div>';
+      grid.innerHTML = '<div class="empty">' + esc(t('catalog.empty')) + '</div>';
     } else {
       grid.innerHTML = products.map(card).join('');
     }
@@ -127,7 +127,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    // Применяем initial state из query-string
     const url = new URL(window.location.href);
     state.category = url.searchParams.get('category') || '';
     state.search   = url.searchParams.get('search')   || '';

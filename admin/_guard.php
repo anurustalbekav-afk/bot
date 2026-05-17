@@ -2,8 +2,6 @@
 /**
  * Общий «вход» для всех админ-страниц.
  * Подключается первой строкой каждого файла в /admin/.
- *
- * Возвращает массив текущего админа.
  */
 declare(strict_types=1);
 
@@ -16,11 +14,13 @@ if (!$me) {
 }
 if (!Auth::isAdmin($me)) {
     http_response_code(403);
-    header('Content-Type: text/html; charset=utf-8');
-    echo '<!doctype html><meta charset="utf-8"><title>403</title>'
-       . '<body style="font:14px system-ui;padding:32px;color:#eee;background:#0a0a0c">'
-       . '<h1>403 Forbidden</h1><p>Доступ только для администраторов.</p>'
-       . '<p><a style="color:#9cf" href="/dashboard.php">В кабинет</a></p></body>';
+    require_once __DIR__ . '/../lib/layout.php';
+    layout_head('meta.title.admin', 'fear.dev — 403', $me);
+    echo '<main class="shell-page"><section class="panel notfound">'
+       . '<h1>403</h1><p>Доступ только для администраторов.</p>'
+       . '<p><a href="/dashboard.php">В кабинет</a></p>'
+       . '</section></main>';
+    layout_foot();
     exit;
 }
 

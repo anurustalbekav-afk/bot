@@ -21,7 +21,7 @@
     if (!el) return;
     if (!key) { el.textContent = ''; el.className = 'status'; return; }
     el.textContent = t(key);
-    el.className = 'status ' + (kind === 'error' ? 'error' : 'ok');
+    el.className = 'status show ' + (kind === 'error' ? 'error' : 'ok');
   }
 
   function fmtPrice(cents, currency) { return (cents/100).toFixed(2) + ' ' + currency; }
@@ -40,7 +40,6 @@
       const res = await fetch('/api/products.php?' + q.toString(), { credentials: 'same-origin' });
       const body = await res.json();
       if (!body.ok) { setStatus('status', 'error', 'err.unknown'); return; }
-      // Фильтр по статусу — на клиенте, чтобы не плодить ещё один параметр API.
       let products = body.products;
       if (state.status) products = products.filter((p) => p.status === state.status);
       state.total = state.status ? products.length : body.total;
@@ -68,12 +67,12 @@
 
   function rowHtml(p) {
     const statusBadge = p.status === 'published'
-      ? '<span class="role-badge role-admin">' + esc(t('admin.products.status.published') || 'published') + '</span>'
-      : '<span class="role-badge role-user">'  + esc(t('admin.products.status.draft')     || 'draft')     + '</span>';
+      ? '<span class="pill status-published">' + esc(t('admin.products.status.published') || 'published') + '</span>'
+      : '<span class="pill status-draft">'     + esc(t('admin.products.status.draft')     || 'draft')     + '</span>';
     return `
       <tr data-id="${p.id}">
         <td>
-          <a href="/product.php?slug=${encodeURIComponent(p.slug)}" target="_blank">
+          <a href="/product.php?slug=${encodeURIComponent(p.slug)}" target="_blank" style="color:inherit; text-decoration:none">
             <strong>${esc(p.title)}</strong>
           </a>
           <div class="muted">${esc(p.slug)}</div>
@@ -82,9 +81,9 @@
         <td>${fmtPrice(p.price_cents, p.currency)}</td>
         <td>${statusBadge}</td>
         <td>
-          <button class="btn btn-ghost" data-action="edit">✎</button>
-          <button class="btn btn-ghost" data-action="toggle">${p.status === 'published' ? '⏸' : '▶'}</button>
-          <button class="danger" data-action="delete">🗑</button>
+          <button class="icon-btn" data-action="edit" title="${esc(t('admin.products.edit'))}">✎</button>
+          <button class="icon-btn" data-action="toggle" title="${p.status === 'published' ? '⏸' : '▶'}">${p.status === 'published' ? '⏸' : '▶'}</button>
+          <button class="icon-btn danger" data-action="delete" title="${esc(t('admin.delete'))}">🗑</button>
         </td>
       </tr>`;
   }
@@ -101,7 +100,7 @@
           return;
         }
         if (action === 'toggle') {
-          const isPublished = tr.querySelector('.role-admin') !== null;
+          const isPublished = tr.querySelector('.status-published') !== null;
           const r = await FD_AUTH.postJson('/api/admin/products.php', {
             action: isPublished ? 'unpublish' : 'publish', id,
           });
