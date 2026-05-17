@@ -39,6 +39,7 @@ $pub = fd_public_user($user);
         <button type="button" data-lang-btn="en">EN</button>
       </div>
       <span class="adm-me" title="<?= fd_e($pub['email']) ?>"><?= fd_e($pub['login']) ?></span>
+      <a class="btn btn-ghost btn-sm" href="/catalog.php" data-i18n="btn.catalog">Каталог</a>
       <a class="btn btn-ghost btn-sm" href="/dashboard.php" data-i18n="btn.back">Кабинет</a>
     </div>
   </header>

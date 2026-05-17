@@ -39,8 +39,9 @@ $pub = fd_public_user($user);
       </div>
 
       <div class="actions">
+        <a class="btn btn-primary" href="/catalog.php" data-i18n="btn.catalog">Каталог</a>
         <?php if ($pub['isAdmin']): ?>
-          <a class="btn btn-primary" href="/admin.php" data-i18n="btn.admin">Админка</a>
+          <a class="btn btn-ghost" href="/admin.php" data-i18n="btn.admin">Админка</a>
         <?php endif; ?>
         <button id="logoutBtn" class="btn btn-ghost" data-i18n="btn.logout">Выйти</button>
       </div>

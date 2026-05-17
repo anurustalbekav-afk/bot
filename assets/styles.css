@@ -494,3 +494,18 @@ select.adm-input { appearance: none; padding-right: 28px; background-image: line
   .adm-table tbody td { display: block; padding: 8px 12px; border: 0; }
   .adm-table tbody tr { display: block; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
 }
+
+
+/* ============================================================
+   Public catalog
+   ============================================================ */
+
+body.catalog-body { display: block; min-height: 100vh; }
+
+.cat-tabs { flex-wrap: wrap; }
+
+.cat-card .mod-body { gap: 10px; }
+
+@media (max-width: 720px) {
+  .cat-tabs { width: 100%; justify-content: center; }
+}
