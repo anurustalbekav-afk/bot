@@ -1,71 +1,132 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
+const mysql = require('mysql2/promise');
 
 /**
- * Tiny JSON-file database. Good enough to ship the auth flow without external
- * deps. When traffic grows, swap this module for SQLite/Postgres without
- * touching the rest of the app — only the function signatures need to remain.
+ * MySQL / MariaDB слой доступа к данным.
+ *
+ * Конфигурация — через переменные окружения (см. .env.example):
+ *   DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_CONNECTION_LIMIT
+ *
+ * API совместим со старым JSON-хранилищем, но методы теперь async:
+ *   findByEmail, findByLogin, findByEmailOrLogin, findById, createUser,
+ *   init, getPool.
  */
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
+let pool = null;
 
-function ensureStore() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(USERS_FILE)) {
-    fs.writeFileSync(USERS_FILE, JSON.stringify({ users: [] }, null, 2));
-  }
+function getPool() {
+  if (pool) return pool;
+  pool = mysql.createPool({
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'fear_dev',
+    connectionLimit: Number(process.env.DB_CONNECTION_LIMIT || 10),
+    waitForConnections: true,
+    charset: 'utf8mb4_unicode_ci',
+    dateStrings: false,
+    namedPlaceholders: false,
+    timezone: 'Z',
+  });
+  return pool;
 }
 
-function readAll() {
-  ensureStore();
-  const raw = fs.readFileSync(USERS_FILE, 'utf8');
-  try {
-    const parsed = JSON.parse(raw);
-    if (!parsed || !Array.isArray(parsed.users)) return { users: [] };
-    return parsed;
-  } catch {
-    return { users: [] };
-  }
+/**
+ * Создаёт таблицу `users`, если её ещё нет. Удобно при первом запуске,
+ * чтобы не приходилось вручную импортировать схему. Идемпотентно.
+ */
+async function init() {
+  const p = getPool();
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id            CHAR(36)      NOT NULL,
+      email         VARCHAR(254)  NOT NULL,
+      login         VARCHAR(24)   NOT NULL,
+      password_hash VARCHAR(255)  NOT NULL,
+      created_at    DATETIME(3)   NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+      PRIMARY KEY (id),
+      UNIQUE KEY uk_users_email (email),
+      UNIQUE KEY uk_users_login (login)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
 }
 
-function writeAll(state) {
-  ensureStore();
-  const tmp = USERS_FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
-  fs.renameSync(tmp, USERS_FILE);
+function rowToUser(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    email: row.email,
+    login: row.login,
+    passwordHash: row.password_hash,
+    createdAt:
+      row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
+  };
 }
 
-function findByEmail(email) {
+async function findByEmail(email) {
   const norm = String(email || '').trim().toLowerCase();
-  return readAll().users.find((u) => u.email === norm) || null;
+  if (!norm) return null;
+  const [rows] = await getPool().query('SELECT * FROM users WHERE email = ? LIMIT 1', [norm]);
+  return rowToUser(rows[0]);
 }
 
-function findByLogin(login) {
-  const norm = String(login || '').trim().toLowerCase();
-  return readAll().users.find((u) => u.login.toLowerCase() === norm) || null;
+async function findByLogin(login) {
+  const norm = String(login || '').trim();
+  if (!norm) return null;
+  // login сравниваем регистронезависимо — utf8mb4_unicode_ci уже это делает,
+  // но на всякий случай нормализуем явно через LOWER.
+  const [rows] = await getPool().query(
+    'SELECT * FROM users WHERE LOWER(login) = LOWER(?) LIMIT 1',
+    [norm],
+  );
+  return rowToUser(rows[0]);
 }
 
-function findByEmailOrLogin(identifier) {
-  return findByEmail(identifier) || findByLogin(identifier);
+async function findByEmailOrLogin(identifier) {
+  const norm = String(identifier || '').trim();
+  if (!norm) return null;
+  const [rows] = await getPool().query(
+    'SELECT * FROM users WHERE email = LOWER(?) OR LOWER(login) = LOWER(?) LIMIT 1',
+    [norm, norm],
+  );
+  return rowToUser(rows[0]);
 }
 
-function findById(id) {
-  return readAll().users.find((u) => u.id === id) || null;
+async function findById(id) {
+  if (!id) return null;
+  const [rows] = await getPool().query('SELECT * FROM users WHERE id = ? LIMIT 1', [id]);
+  return rowToUser(rows[0]);
 }
 
-function createUser(user) {
-  const state = readAll();
-  state.users.push(user);
-  writeAll(state);
-  return user;
+async function createUser(user) {
+  // user: { id, email, login, passwordHash, createdAt }
+  await getPool().query(
+    `INSERT INTO users (id, email, login, password_hash, created_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [
+      user.id,
+      String(user.email).toLowerCase(),
+      user.login,
+      user.passwordHash,
+      new Date(user.createdAt || Date.now()),
+    ],
+  );
+  return findById(user.id);
+}
+
+async function close() {
+  if (pool) {
+    await pool.end();
+    pool = null;
+  }
 }
 
 module.exports = {
+  getPool,
+  init,
+  close,
   findByEmail,
   findByLogin,
   findByEmailOrLogin,

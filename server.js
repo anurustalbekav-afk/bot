@@ -134,12 +134,12 @@ function publicUser(u) {
   return { id: u.id, email: u.email, login: u.login, createdAt: u.createdAt };
 }
 
-function getCurrentUser(req) {
+async function getCurrentUser(req) {
   const cookies = parseCookies(req);
   const token = cookies['fd_session'];
   const payload = verifySession(token, AUTH_SECRET);
   if (!payload) return null;
-  const user = db.findById(payload.sub);
+  const user = await db.findById(payload.sub);
   return user || null;
 }
 
@@ -181,17 +181,27 @@ async function handleRegister(req, res) {
   const errs = [validateEmail(email), validateLogin(login), validatePassword(password)].filter(Boolean);
   if (errs.length) return sendJson(res, 400, { ok: false, error: errs[0] });
 
-  if (db.findByEmail(email)) return sendJson(res, 409, { ok: false, error: 'email_taken' });
-  if (db.findByLogin(login)) return sendJson(res, 409, { ok: false, error: 'login_taken' });
+  if (await db.findByEmail(email)) return sendJson(res, 409, { ok: false, error: 'email_taken' });
+  if (await db.findByLogin(login)) return sendJson(res, 409, { ok: false, error: 'login_taken' });
 
   const passwordHash = await hashPassword(password);
-  const user = db.createUser({
-    id: crypto.randomUUID(),
-    email,
-    login,
-    passwordHash,
-    createdAt: new Date().toISOString(),
-  });
+  let user;
+  try {
+    user = await db.createUser({
+      id: crypto.randomUUID(),
+      email,
+      login,
+      passwordHash,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    // Возможна гонка: уникальный индекс отловит дубликат
+    if (err && err.code === 'ER_DUP_ENTRY') {
+      const which = String(err.message || '').includes('uk_users_login') ? 'login_taken' : 'email_taken';
+      return sendJson(res, 409, { ok: false, error: which });
+    }
+    throw err;
+  }
 
   const token = signSession(user.id, AUTH_SECRET, SESSION_TTL);
   setSessionCookie(res, token, SESSION_TTL);
@@ -216,7 +226,7 @@ async function handleLogin(req, res) {
   const password = String(body.password || '');
   if (!identifier || !password) return sendJson(res, 400, { ok: false, error: 'missing_credentials' });
 
-  const user = db.findByEmailOrLogin(identifier);
+  const user = await db.findByEmailOrLogin(identifier);
   // constant-ish time: still run a hash compare even when user not found
   const ok = user ? await verifyPassword(password, user.passwordHash) : false;
   if (!user || !ok) return sendJson(res, 401, { ok: false, error: 'invalid_credentials' });
@@ -226,8 +236,8 @@ async function handleLogin(req, res) {
   return sendJson(res, 200, { ok: true, user: publicUser(user) });
 }
 
-function handleMe(req, res) {
-  const user = getCurrentUser(req);
+async function handleMe(req, res) {
+  const user = await getCurrentUser(req);
   if (!user) return sendJson(res, 401, { ok: false, error: 'unauthorized' });
   return sendJson(res, 200, { ok: true, user: publicUser(user) });
 }
@@ -300,6 +310,29 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`fear.dev listening on http://localhost:${PORT}`);
-});
+// --- bootstrap --------------------------------------------------------------
+
+(async () => {
+  try {
+    await db.init();
+    console.log('[fear.dev] MySQL pool ready, schema ensured');
+  } catch (err) {
+    console.error('[fear.dev] failed to initialise database:', err.message);
+    process.exit(1);
+  }
+
+  server.listen(PORT, () => {
+    console.log(`fear.dev listening on http://localhost:${PORT}`);
+  });
+})();
+
+async function shutdown(signal) {
+  console.log(`[fear.dev] received ${signal}, shutting down`);
+  server.close(() => {});
+  try {
+    await db.close();
+  } catch {}
+  process.exit(0);
+}
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
