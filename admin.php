@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../lib/bootstrap.php';
+require_once __DIR__ . '/lib/bootstrap.php';
 
 $user = fd_current_user();
 if (!$user) { header('Location: /index.php'); exit; }

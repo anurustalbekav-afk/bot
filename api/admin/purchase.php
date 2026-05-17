@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../../lib/bootstrap.php';
+require_once __DIR__ . '/../../lib/bootstrap.php';
 
 fd_require_admin();
 fd_require_method('POST');

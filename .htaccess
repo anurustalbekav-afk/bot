@@ -1,0 +1,80 @@
+# fear.dev — shared-hosting front controller
+# Apache/LiteSpeed (cPanel/ISPmanager). PHP 8.1+.
+
+# ---------------------------------------------------------------------------
+# Default index
+# ---------------------------------------------------------------------------
+DirectoryIndex index.php index.html
+
+# ---------------------------------------------------------------------------
+# Block access to sensitive folders and dotfiles
+# ---------------------------------------------------------------------------
+RedirectMatch 404 (?i)^/(lib|data)(/|$)
+RedirectMatch 404 (?i)/\.(env|git|htaccess|htpasswd|DS_Store)(/|$)
+
+<FilesMatch "(?i)\.(env|md|sample|example|log|json)$">
+  Require all denied
+</FilesMatch>
+
+# data/users.json and data/mods.json should never be served, even if someone
+# guesses the path. The RedirectMatch above already handles /data/*, this is
+# a belt-and-braces guard for misconfigured hosts.
+<FilesMatch "(?i)^(users|mods|ratelimit)\.json$">
+  Require all denied
+</FilesMatch>
+
+# ---------------------------------------------------------------------------
+# Rewrite rules
+# ---------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Hide ".php" from URLs (optional — both /admin and /admin.php work).
+  # Existing real files/dirs are served as-is.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !\.[a-zA-Z0-9]+$
+  RewriteRule ^([^/]+)/?$ $1.php [L]
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Security headers
+# ---------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+  # CSP: allow images from data: + https for mod banners.
+  Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'"
+  # No caching for HTML/PHP responses.
+  <FilesMatch "\.(php|html?)$">
+    Header set Cache-Control "no-store, max-age=0"
+  </FilesMatch>
+  # Long cache for static assets (cache-bust by changing filename).
+  <FilesMatch "\.(css|js|svg|png|jpg|jpeg|webp|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Compression
+# ---------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml text/plain
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Disable directory listings
+# ---------------------------------------------------------------------------
+Options -Indexes -MultiViews +FollowSymLinks
+
+# ---------------------------------------------------------------------------
+# UTF-8 by default
+# ---------------------------------------------------------------------------
+AddDefaultCharset UTF-8
+
+# ---------------------------------------------------------------------------
+# Custom error pages (fall back to default index for 404 inside SPA-like flows)
+# ---------------------------------------------------------------------------
+ErrorDocument 404 /index.php

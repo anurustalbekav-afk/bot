@@ -45,6 +45,19 @@ date_default_timezone_set('UTC');
 if (!is_dir(FD_DATA_DIR)) {
     @mkdir(FD_DATA_DIR, 0775, true);
 }
+// Ensure the data directory is never browsable, even if .htaccess from the
+// repo gets stripped during deployment. Cheap to call on every request.
+(function (): void {
+    $ht = FD_DATA_DIR . '/.htaccess';
+    if (!is_file($ht)) {
+        @file_put_contents(
+            $ht,
+            "Require all denied\n<IfModule !mod_authz_core.c>\nOrder allow,deny\nDeny from all\n</IfModule>\n"
+        );
+    }
+    $idx = FD_DATA_DIR . '/index.html';
+    if (!is_file($idx)) @file_put_contents($idx, '');
+})();
 
 // --- session ----------------------------------------------------------------
 

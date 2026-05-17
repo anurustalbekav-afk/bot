@@ -280,10 +280,11 @@
     for (const m of filtered) {
       const card = document.createElement('article');
       card.className = 'mod-card';
+      const fallbackChar = (m.title || '?').slice(0, 1).toUpperCase();
       card.innerHTML = `
         <div class="mod-banner">
-          ${m.banner ? `<img alt="" loading="lazy" src="${escape(m.banner)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'mod-banner-fallback',textContent:'${escape(m.title.slice(0, 1).toUpperCase())}'}))" />`
-                     : `<div class="mod-banner-fallback">${escape((m.title || '?').slice(0, 1).toUpperCase())}</div>`}
+          ${m.banner ? `<img alt="" loading="lazy" src="${escape(m.banner)}" data-fallback="${escape(fallbackChar)}" />`
+                     : `<div class="mod-banner-fallback">${escape(fallbackChar)}</div>`}
           <span class="mod-pill">${escape(m.type)}</span>
         </div>
         <div class="mod-body">
@@ -308,6 +309,17 @@
 
   $('#modSearch').addEventListener('input', renderMods);
   $('#addModBtn').addEventListener('click', () => openModForm(null));
+
+  // Fallback for broken banner URLs (kept out of inline handlers so the strict
+  // CSP `script-src 'self'` from the host can stay enabled).
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement) || !img.dataset.fallback) return;
+    const div = document.createElement('div');
+    div.className = 'mod-banner-fallback';
+    div.textContent = img.dataset.fallback;
+    img.replaceWith(div);
+  }, true);
 
   document.addEventListener('click', (e) => {
     const editBtn = e.target.closest('[data-mod-edit]');

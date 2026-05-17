@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../lib/bootstrap.php';
+require_once __DIR__ . '/lib/bootstrap.php';
 
 $user = fd_current_user();
 if (!$user) {
@@ -55,16 +55,6 @@ $pub = fd_public_user($user);
 
   <script src="/assets/i18n.js"></script>
   <script src="/assets/auth.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      window.FD_I18N.mount();
-      const created = document.getElementById('userCreated');
-      try { created.textContent = new Date(created.textContent).toLocaleString(window.FD_I18N.getLocale()); } catch {}
-      document.getElementById('logoutBtn').addEventListener('click', async () => {
-        await FD_AUTH.postJson('/api/logout.php', {});
-        window.location.replace('/index.php');
-      });
-    });
-  </script>
+  <script src="/assets/page-dashboard.js"></script>
 </body>
 </html>

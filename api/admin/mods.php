@@ -7,7 +7,7 @@
  *   DELETE /api/admin/mods.php?id=...    — delete
  */
 
-require_once __DIR__ . '/../../../lib/bootstrap.php';
+require_once __DIR__ . '/../../lib/bootstrap.php';
 
 fd_require_admin();
 
