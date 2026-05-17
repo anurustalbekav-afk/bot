@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Вход — LAMBADA BONUS</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="brand" style="border:0;padding:0;margin-bottom:18px;">
+        <div class="brand-logo">LB</div>
+        <div class="brand-name">LAMBADA<span>BONUS</span></div>
+      </div>
+      <h1>Вход в аккаунт</h1>
+      <p class="lead">Введи логин или e-mail и пароль.</p>
+
+      <div id="flash" class="flash"></div>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="identifier">Логин или e-mail</label>
+          <input id="identifier" name="identifier" autocomplete="username" required />
+          <div class="err" data-err="identifier"></div>
+        </div>
+        <div class="field">
+          <label for="password">Пароль</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+          <div class="err" data-err="password"></div>
+        </div>
+        <button type="submit" class="btn-primary">Войти</button>
+      </form>
+
+      <p class="auth-foot">Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+      <p class="auth-foot"><a href="/">← на главную</a></p>
+    </div>
+  </div>
+  <script src="/assets/auth.js"></script>
+</body>
+</html>

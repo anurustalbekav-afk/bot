@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Личный кабинет — LAMBADA BONUS</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">LB</div>
+        <div class="brand-name">LAMBADA<span>BONUS</span></div>
+      </div>
+      <nav class="nav">
+        <a href="/"><span class="ic">⌂</span>ГЛАВНАЯ</a>
+        <a href="#news"><span class="ic">▤</span>НОВОСТИ</a>
+        <a href="#servers"><span class="ic">▦</span>СЕРВЕРЫ</a>
+        <a href="#shop"><span class="ic">⛁</span>МАГАЗИН</a>
+        <a href="#settings"><span class="ic">⚙</span>НАСТРОЙКИ</a>
+        <a href="#support"><span class="ic">☎</span>ПОДДЕРЖКА</a>
+        <a href="/dashboard" class="active"><span class="ic">☺</span>АККАУНТ</a>
+        <a href="#" id="logoutBtn"><span class="ic">⇤</span>ВЫХОД</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar" id="topbar"></div>
+
+      <div class="dash-grid">
+        <section class="card">
+          <h2>Профиль</h2>
+          <div class="kv"><span>Логин</span><b id="pLogin">—</b></div>
+          <div class="kv"><span>E-mail</span><b id="pEmail">—</b></div>
+          <div class="kv"><span>ID игрока</span><b id="pId">—</b></div>
+          <div class="kv"><span>Зарегистрирован</span><b id="pCreated">—</b></div>
+          <div style="margin-top:18px; display:flex; gap:10px;">
+            <a href="/" class="btn-primary" style="width:auto; padding:10px 18px; text-align:center;">На главную</a>
+            <button id="logoutBtn2" class="btn-danger">Выйти из аккаунта</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Игровая статистика</h2>
+          <div class="kv"><span>Любимый сервер</span><b>LAMBADA BONUS | 01</b></div>
+          <div class="kv"><span>Часов в игре</span><b>0</b></div>
+          <div class="kv"><span>Уровень</span><b>1</b></div>
+          <div class="kv"><span>Деньги в игре</span><b>$ 0</b></div>
+          <p style="margin-top:14px; color:var(--text-muted); font-size:12px;">
+            Статистика подгрузится автоматически после первой игровой сессии.
+          </p>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/assets/auth.js"></script>
+</body>
+</html>
