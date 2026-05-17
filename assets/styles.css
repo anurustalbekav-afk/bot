@@ -285,3 +285,103 @@ form { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
   .brand h1 { font-size: 19px; }
   .topbar { padding: 14px 16px; }
 }
+
+
+
+/* ===== Расширенный topbar (для каталога/админки/кабинета) ================
+   Использует те же переменные. Когда topbar пустой, как на login —
+   .brand-mark и .topnav просто не рендерятся, и старый макет не страдает.
+   ======================================================================= */
+.topbar {
+  /* делаем sticky-вариант, чтобы навигация была всегда под рукой */
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 28px;
+  background: linear-gradient(180deg, rgba(10,10,12,0.92), rgba(10,10,12,0.55) 70%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+  font: 800 13px/1 'Inter', sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.logo-mini {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: #fff;
+  display: grid; place-items: center;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+}
+.logo-mini svg { width: 16px; height: 16px; }
+
+.topnav {
+  display: inline-flex;
+  gap: 4px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 4px;
+}
+.topnav a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font: 600 12px/1 'Inter', sans-serif;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 999px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.topnav a:hover { color: var(--text); }
+.topnav a.active { background: #fff; color: #111; }
+
+.topright {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.topright .who {
+  font: 600 11px/1 'Inter', sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* На login/register topbar старого вида содержит только .lang-switch.
+   Вышеописанные стили никаких регрессий не дают: justify-content:space-between
+   с одним элементом просто прижмёт его к правому краю. */
+
+.page-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text-mute);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 30px 16px 36px;
+}
+.page-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-mute); }
+
+/* Адаптивность шапки */
+@media (max-width: 720px) {
+  .topbar { flex-wrap: wrap; padding: 12px 14px; gap: 8px; }
+  .topnav { order: 3; flex-basis: 100%; justify-content: center; }
+  .topright .who { display: none; }
+}

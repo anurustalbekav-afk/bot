@@ -69,22 +69,53 @@ function rate_limit(string $key, int $limit, int $windowSec): bool
 }
 
 /**
+ * Конвертит DATETIME строку MySQL (UTC) в ISO-8601 для фронта.
+ */
+function iso_utc(?string $datetime): ?string
+{
+    if (!$datetime) return null;
+    $ts = strtotime($datetime . ' UTC');
+    return $ts !== false ? gmdate('Y-m-d\TH:i:s\Z', $ts) : $datetime;
+}
+
+/**
+ * Публичный формат товара. $withDescription=true только для карточки —
+ * в листинге описание не нужно и просто раздувает payload.
+ */
+function public_product(array $row, bool $withDescription = false): array
+{
+    $out = [
+        'id'           => (int)$row['id'],
+        'slug'         => $row['slug'],
+        'title'        => $row['title'],
+        'summary'      => $row['summary'] ?? '',
+        'price_cents'  => (int)$row['price_cents'],
+        'currency'     => $row['currency'] ?? 'USD',
+        'image_url'    => $row['image_url'] ?? '',
+        'status'       => $row['status'] ?? 'draft',
+        'category_id'  => isset($row['category_id']) ? (int)$row['category_id'] : null,
+        'category_slug'  => $row['category_slug']  ?? null,
+        'category_title' => $row['category_title'] ?? null,
+        'created_at'   => iso_utc($row['created_at'] ?? null),
+        'updated_at'   => iso_utc($row['updated_at'] ?? null),
+    ];
+    if ($withDescription) {
+        $out['description'] = $row['description'] ?? '';
+    }
+    return $out;
+}
+
+/**
  * Преобразует строку БД в публичный формат (без password_hash).
  * createdAt отдаётся ISO-8601 в UTC, чтобы JS легко его парсил.
  */
 function public_user(array $row): array
 {
-    $created = $row['created_at'] ?? null;
-    if ($created) {
-        $ts = strtotime($created . ' UTC');
-        if ($ts !== false) {
-            $created = gmdate('Y-m-d\TH:i:s\Z', $ts);
-        }
-    }
     return [
         'id'        => $row['id'],
         'email'     => $row['email'],
         'login'     => $row['login'],
-        'createdAt' => $created,
+        'role'      => $row['role'] ?? DB::ROLE_USER,
+        'createdAt' => iso_utc($row['created_at'] ?? null),
     ];
 }

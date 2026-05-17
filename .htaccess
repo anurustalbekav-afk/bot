@@ -1,20 +1,22 @@
 # fear.dev — Apache config
 # Этот файл нужен только если сайт хостится под Apache (XAMPP / shared-хостинг).
-# На nginx используется отдельный server-блок.
 
-# Запрещаем доступ к чувствительным файлам и каталогам
+# Запрещаем доступ к чувствительным файлам
 <FilesMatch "^(config\.php|config\.example\.php|\.gitignore|\.env)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^_guard\.php$">
     Require all denied
 </FilesMatch>
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Закрываем lib/ и sql/ извне
-    RewriteRule ^lib/.*  - [F,L]
-    RewriteRule ^sql/.*  - [F,L]
+    # Закрываем lib/, sql/, scripts/ извне
+    RewriteRule ^lib/.*      - [F,L]
+    RewriteRule ^sql/.*      - [F,L]
+    RewriteRule ^scripts/.*  - [F,L]
 </IfModule>
 
-# Корректные кодировки и кэш для статики
 AddDefaultCharset UTF-8
 
 <IfModule mod_headers.c>
