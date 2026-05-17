@@ -181,6 +181,66 @@ function fd_user_add_purchase(string $userId, array $entry): ?array
     });
 }
 
+/**
+ * Atomically debit the user's balance and append a purchase record.
+ *
+ * Returns ['error' => 'insufficient_funds' | 'user_not_found', ...] on failure
+ * or ['ok' => true, 'purchase' => ..., 'balance' => float] on success.
+ *
+ * The balance check and write happen under the same flock so two parallel
+ * requests cannot double-spend.
+ */
+function fd_user_buy_atomic(string $userId, array $entry): array
+{
+    return fd_db_with_lock(FD_USERS_FILE, function ($state) use ($userId, $entry) {
+        $state = fd_users_normalize($state ?? ['users' => []]);
+        foreach ($state['users'] as $i => $u) {
+            if (($u['id'] ?? null) !== $userId) continue;
+
+            // Compute current balance from durable history.
+            $balance = 0.0;
+            foreach ($u['topups']    as $t) $balance += (float) ($t['amount'] ?? 0);
+            foreach ($u['purchases'] as $p) $balance -= (float) ($p['price']  ?? 0);
+
+            $price = round((float) ($entry['price'] ?? 0), 2);
+            if ($price < 0) {
+                return [['error' => 'purchase_price_invalid'], null];
+            }
+            if (round($balance, 2) + 0.0001 < $price) {
+                return [
+                    [
+                        'error'    => 'insufficient_funds',
+                        'balance'  => round($balance, 2),
+                        'required' => $price,
+                    ],
+                    null,
+                ];
+            }
+
+            // Idempotency-by-mod is intentionally NOT enforced here: a user
+            // may buy the same mod twice (e.g. for a friend) — that's a
+            // product decision and easy to add later if we change our mind.
+
+            $record = [
+                'id'        => fd_uuid(),
+                'kind'      => ($entry['kind'] ?? 'mod') === 'script' ? 'script' : 'mod',
+                'modId'     => $entry['modId'] ?? null,
+                'title'     => (string) ($entry['title'] ?? ''),
+                'price'     => $price,
+                'currency'  => strtoupper((string) ($entry['currency'] ?? 'USD')),
+                'createdAt' => fd_now_iso(),
+            ];
+            $state['users'][$i]['purchases'][] = $record;
+
+            return [
+                ['ok' => true, 'purchase' => $record, 'balance' => round($balance - $price, 2)],
+                $state,
+            ];
+        }
+        return [['error' => 'user_not_found'], null];
+    });
+}
+
 // --- mods -------------------------------------------------------------------
 
 function fd_mods_all(): array
@@ -209,15 +269,16 @@ function fd_mod_create(array $patch): array
         }
         $now = fd_now_iso();
         $mod = [
-            'id'        => fd_uuid(),
-            'title'     => (string) ($patch['title']    ?? ''),
-            'banner'    => (string) ($patch['banner']   ?? ''),
-            'url'       => (string) ($patch['url']      ?? ''),
-            'price'     => round((float) ($patch['price'] ?? 0), 2),
-            'currency'  => strtoupper((string) ($patch['currency'] ?? 'USD')),
-            'type'      => ($patch['type'] ?? null) === 'script' ? 'script' : 'mod',
-            'createdAt' => $now,
-            'updatedAt' => $now,
+            'id'          => fd_uuid(),
+            'title'       => (string) ($patch['title']    ?? ''),
+            'description' => (string) ($patch['description'] ?? ''),
+            'banner'      => (string) ($patch['banner']   ?? ''),
+            'url'         => (string) ($patch['url']      ?? ''),
+            'price'       => round((float) ($patch['price'] ?? 0), 2),
+            'currency'    => strtoupper((string) ($patch['currency'] ?? 'USD')),
+            'type'        => ($patch['type'] ?? null) === 'script' ? 'script' : 'mod',
+            'createdAt'   => $now,
+            'updatedAt'   => $now,
         ];
         $state['mods'][] = $mod;
         return [$mod, $state];
@@ -232,7 +293,7 @@ function fd_mod_update(string $id, array $patch): ?array
         }
         foreach ($state['mods'] as $i => $m) {
             if (($m['id'] ?? null) !== $id) continue;
-            $allowed = ['title', 'banner', 'url', 'price', 'currency', 'type'];
+            $allowed = ['title', 'description', 'banner', 'url', 'price', 'currency', 'type'];
             foreach ($allowed as $k) {
                 if (!array_key_exists($k, $patch)) continue;
                 if ($k === 'price')         $m[$k] = round((float) $patch[$k], 2);

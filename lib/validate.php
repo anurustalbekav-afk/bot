@@ -62,6 +62,11 @@ function fd_validate_mod(array $input, bool $partial = false): array
         elseif (mb_strlen($t) > 120) $err ??= 'mod_title_too_long';
         else                         $out['title'] = $t;
     }
+    if (array_key_exists('description', $input) || !$partial) {
+        $d = trim((string) ($input['description'] ?? ''));
+        if (mb_strlen($d) > 4000) $err ??= 'mod_description_too_long';
+        else                       $out['description'] = $d;
+    }
     if (array_key_exists('banner', $input) || !$partial) {
         $e = fd_validate_url($input['banner'] ?? '', allowEmpty: true);
         if ($e) $err ??= 'mod_banner_' . $e;

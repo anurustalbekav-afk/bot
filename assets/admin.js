@@ -339,6 +339,7 @@
       titleEl.textContent = `${t('admin.mods.edit')} — ${m.title}`;
       form.id.value       = m.id;
       form.title.value    = m.title || '';
+      form.description.value = m.description || '';
       form.banner.value   = m.banner || '';
       form.url.value      = m.url || '';
       form.price.value    = m.price ?? 0;
@@ -360,9 +361,10 @@
     FD_AUTH.clearStatus(status);
 
     const payload = {
-      title:    form.title.value.trim(),
-      banner:   form.banner.value.trim(),
-      url:      form.url.value.trim(),
+      title:       form.title.value.trim(),
+      description: form.description.value.trim(),
+      banner:      form.banner.value.trim(),
+      url:         form.url.value.trim(),
       price:    Number(form.price.value),
       currency: (form.currency.value || 'USD').toUpperCase(),
       type:     form.type.value,

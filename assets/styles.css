@@ -497,15 +497,233 @@ select.adm-input { appearance: none; padding-right: 28px; background-image: line
 
 
 /* ============================================================
-   Public catalog
+   Public catalog + details / payment modals + dashboard
    ============================================================ */
 
-body.catalog-body { display: block; min-height: 100vh; }
+body.catalog-body, body.dash-body { display: block; min-height: 100vh; }
 
 .cat-tabs { flex-wrap: wrap; }
-
+.cat-card { cursor: pointer; }
 .cat-card .mod-body { gap: 10px; }
+
+/* Account balance pill in the top bar */
+.adm-balance {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--text);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.adm-balance[hidden] { display: none; }
+
+.dash-h2 { margin: 0 0 18px; font-size: 22px; letter-spacing: 0.04em; }
+
+/* --- Details modal (banner on top, description, big buy button) --- */
+
+.modal-details { max-width: 560px; padding: 0; overflow: hidden; }
+.modal-x-float {
+  position: absolute;
+  top: 10px; right: 10px;
+  z-index: 2;
+  width: 34px; height: 34px;
+  background: rgba(10,10,12,0.6);
+  border: 1px solid var(--card-border);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 22px; line-height: 1;
+  display: grid; place-items: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+.modal-x-float:hover { background: rgba(10,10,12,0.85); }
+
+.details-banner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, #1a1b22, #0f1014);
+  overflow: hidden;
+  border-radius: 18px 18px 0 0;
+}
+.details-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.details-banner .mod-banner-fallback {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-weight: 800; letter-spacing: 0.1em; font-size: 64px; color: rgba(255,255,255,0.18);
+}
+.details-banner .mod-pill {
+  position: absolute; left: 14px; top: 14px;
+  background: rgba(10,10,12,0.7); color: #fff;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+}
+
+.details-body {
+  padding: 22px 24px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+  max-height: 60vh; overflow: auto;
+}
+.details-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+.details-description {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.details-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--card-border);
+}
+.details-price {
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+}
+.details-foot .btn-primary { margin-top: 0; padding: 14px 28px; }
+
+/* --- Payment / insufficient-funds modal --- */
+
+.modal-pay { max-width: 460px; padding: 28px 24px 22px; }
+.pay-head { margin-bottom: 18px; padding-right: 30px; }
+.pay-title {
+  margin: 0 0 8px;
+  font-size: 24px; font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+.pay-title #payAmount { color: #fff; }
+.pay-hint {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.pay-section { margin-top: 6px; }
+.pay-section-title {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-bottom: 10px;
+}
+
+.pay-methods { display: flex; flex-direction: column; gap: 8px; }
+.pay-method {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 14px;
+  color: var(--text);
+  font: 600 13.5px/1 'Inter', sans-serif;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .15s ease, background .15s ease;
+}
+.pay-method:hover { border-color: var(--input-border-focus); background: rgba(255,255,255,0.06); }
+
+.pay-method-ico {
+  width: 36px; height: 24px;
+  display: grid; place-items: center;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-dim);
+  flex: 0 0 36px;
+  font: 800 9.5px/1 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+}
+.pay-method-ico svg { width: 18px; height: 18px; }
+.pay-method-mir { background: linear-gradient(135deg, #007a3d, #0099d4); color: #fff; }
+.pay-method-sbp { background: linear-gradient(135deg, #ffd24d, #4a90e2); color: #fff; }
+.pay-method-yoo { background: #8e44ff; color: #fff; font-size: 12px; }
+
+.pay-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--card-border);
+}
+.pay-error {
+  color: #ff8b97;
+  font-weight: 600;
+  font-size: 12.5px;
+  background: rgba(255, 93, 108, 0.08);
+  border: 1px solid rgba(255, 93, 108, 0.25);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+/* --- Mobile adaptation --- */
 
 @media (max-width: 720px) {
   .cat-tabs { width: 100%; justify-content: center; }
+
+  .adm-top {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 14px;
+    align-items: stretch;
+  }
+  .adm-top-left { flex: 1 1 100%; }
+  .adm-top-right {
+    width: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .adm-tabs { width: 100%; justify-content: center; }
+  .adm-tab { flex: 1 1 0; padding: 10px 12px; }
+  .adm-balance { order: -1; }
+
+  .adm-main { padding: 16px 12px 32px; }
+  .adm-grid { grid-template-columns: repeat(auto-fill, minmax(0, 1fr)); gap: 12px; }
+  .adm-toolbar { gap: 8px; }
+  .adm-search { min-width: 0; width: 100%; }
+
+  .userbox { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .userbox .cell { padding: 10px 12px; }
+
+  .modal { padding: 0; align-items: stretch; }
+  .modal-box {
+    border-radius: 0;
+    max-height: 100vh; min-height: 100vh;
+    width: 100%;
+  }
+  .modal-details { border-radius: 0; }
+  .details-banner { border-radius: 0; }
+  .details-body { max-height: none; flex: 1; }
+  .details-foot { flex-wrap: wrap; }
+  .details-foot .btn-primary { width: 100%; padding: 14px; }
+  .details-price { font-size: 20px; }
+  .modal-pay { padding: 24px 18px 18px; }
+
+  .pay-method { padding: 14px; }
+  .pay-foot { flex-wrap: wrap; }
+  .pay-error, .pay-foot .btn { width: 100%; text-align: center; }
+
+  /* Make tap targets in the cards a bit beefier on phones */
+  .mod-banner { aspect-ratio: 16 / 10; }
+  .mod-card .btn-sm { padding: 10px 14px; font-size: 11px; }
+}
+
+@media (max-width: 380px) {
+  .userbox { grid-template-columns: 1fr; }
+  .adm-tab { font-size: 11px; padding: 9px 8px; letter-spacing: 0.08em; }
+  .lang-switch button { padding: 6px 10px; }
 }

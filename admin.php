@@ -106,6 +106,8 @@ $pub = fd_public_user($user);
         <input type="hidden" name="id" />
         <label class="adm-label" data-i18n="admin.mods.field.title">Название</label>
         <input class="adm-input" name="title" maxlength="120" required />
+        <label class="adm-label" data-i18n="admin.mods.field.description">Описание</label>
+        <textarea class="adm-input" name="description" rows="4" maxlength="4000"></textarea>
         <label class="adm-label" data-i18n="admin.mods.field.banner">Ссылка на баннер</label>
         <input class="adm-input" name="banner" type="url" placeholder="https://…" />
         <label class="adm-label" data-i18n="admin.mods.field.url">Ссылка на мод</label>

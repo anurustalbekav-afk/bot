@@ -24,13 +24,14 @@ usort($mods, fn($a, $b) => strcmp((string) ($b['createdAt'] ?? ''), (string) ($a
 
 $shape = array_map(static function (array $m): array {
     return [
-        'id'       => $m['id']       ?? null,
-        'title'    => $m['title']    ?? '',
-        'banner'   => $m['banner']   ?? '',
-        'url'      => $m['url']      ?? '',
-        'price'    => (float) ($m['price'] ?? 0),
-        'currency' => $m['currency'] ?? 'USD',
-        'type'     => ($m['type'] ?? null) === 'script' ? 'script' : 'mod',
+        'id'          => $m['id']       ?? null,
+        'title'       => $m['title']    ?? '',
+        'description' => $m['description'] ?? '',
+        'banner'      => $m['banner']   ?? '',
+        'url'         => $m['url']      ?? '',
+        'price'       => (float) ($m['price'] ?? 0),
+        'currency'    => $m['currency'] ?? 'USD',
+        'type'        => ($m['type'] ?? null) === 'script' ? 'script' : 'mod',
     ];
 }, $mods);
 

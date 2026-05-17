@@ -52,6 +52,18 @@ function fd_current_user(): ?array
     return fd_user_find_by_id($uid);
 }
 
+function fd_user_balance(array $u): float
+{
+    $sum = 0.0;
+    foreach (($u['topups'] ?? []) as $t) {
+        $sum += (float) ($t['amount'] ?? 0);
+    }
+    foreach (($u['purchases'] ?? []) as $p) {
+        $sum -= (float) ($p['price'] ?? 0);
+    }
+    return round($sum, 2);
+}
+
 function fd_public_user(array $u): array
 {
     return [
@@ -60,5 +72,7 @@ function fd_public_user(array $u): array
         'login'     => $u['login']     ?? null,
         'createdAt' => $u['createdAt'] ?? null,
         'isAdmin'   => fd_is_admin($u),
+        'balance'   => fd_user_balance($u),
+        'currency'  => 'USD',
     ];
 }
