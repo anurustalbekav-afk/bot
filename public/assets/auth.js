@@ -2,24 +2,26 @@
 (function () {
   const t = (k) => window.FD_I18N.t(k);
 
-  async function postJson(url, data) {
-    const res = await fetch(url, {
-      method: 'POST',
+  async function jsonRequest(method, url, data) {
+    const init = {
+      method,
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data || {}),
-    });
+      headers: { 'Accept': 'application/json' },
+    };
+    if (data !== undefined) {
+      init.headers['Content-Type'] = 'application/json';
+      init.body = JSON.stringify(data || {});
+    }
+    const res = await fetch(url, init);
     let body = null;
     try { body = await res.json(); } catch {}
     return { ok: res.ok, status: res.status, body };
   }
 
-  async function getJson(url) {
-    const res = await fetch(url, { credentials: 'same-origin' });
-    let body = null;
-    try { body = await res.json(); } catch {}
-    return { ok: res.ok, status: res.status, body };
-  }
+  const postJson   = (url, data) => jsonRequest('POST',   url, data);
+  const getJson    = (url)       => jsonRequest('GET',    url);
+  const patchJson  = (url, data) => jsonRequest('PATCH',  url, data);
+  const deleteJson = (url)       => jsonRequest('DELETE', url);
 
   function showStatus(el, kind, key) {
     if (!el) return;
@@ -34,9 +36,8 @@
   }
 
   function errorKey(serverError) {
-    if (!serverError) return 'err.unknown';
-    return 'err.' + serverError;
+    return serverError ? 'err.' + serverError : 'err.unknown';
   }
 
-  window.FD_AUTH = { postJson, getJson, showStatus, clearStatus, errorKey };
+  window.FD_AUTH = { postJson, getJson, patchJson, deleteJson, showStatus, clearStatus, errorKey };
 })();
