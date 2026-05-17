@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LAMBADA BONUS — CRMP проект</title>
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">LB</div>
+        <div class="brand-name">LAMBADA<span>BONUS</span></div>
+      </div>
+      <nav class="nav">
+        <a href="/" class="active"><span class="ic">⌂</span>ГЛАВНАЯ</a>
+        <a href="#news"><span class="ic">▤</span>НОВОСТИ</a>
+        <a href="#servers"><span class="ic">▦</span>СЕРВЕРЫ</a>
+        <a href="#shop"><span class="ic">⛁</span>МАГАЗИН</a>
+        <a href="#settings"><span class="ic">⚙</span>НАСТРОЙКИ</a>
+        <a href="#support"><span class="ic">☎</span>ПОДДЕРЖКА</a>
+        <a href="/dashboard" id="navAccount"><span class="ic">☺</span>АККАУНТ</a>
+        <a href="#" id="navAuthAction"><span class="ic">⇥</span>ВХОД</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar" id="topbar"></div>
+
+      <section class="hero">
+        <div class="hero-left">
+          <div class="hero-eyebrow">CRMP ПРОЕКТ</div>
+          <h1 class="hero-title">LAMBADA<br/><span>BONUS</span></h1>
+
+          <div class="features">
+            <div class="feature"><span class="ic">↻</span><span>СТАБИЛЬНЫЕ<br/>ОБНОВЛЕНИЯ</span></div>
+            <div class="feature"><span class="ic">☺</span><span>ОТЗЫВЧИВОЕ<br/>КОМЬЮНИТИ</span></div>
+            <div class="feature"><span class="ic">✓</span><span>АКТИВНАЯ<br/>АДМИНИСТРАЦИЯ</span></div>
+          </div>
+
+          <p class="hero-text">
+            <b>LAMBADA BONUS</b> — это новый уровень RolePlay в CRMP.
+            Присоединяйся к нам и начни свою историю уже сегодня!
+          </p>
+
+          <div class="servers" id="serversCard">
+            <h3>Выберите сервер</h3>
+            <div id="serversList">Загрузка…</div>
+            <a class="servers-all" href="#servers">ВСЕ СЕРВЕРЫ →</a>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="news-panel" id="newsPanel">
+            <div class="news-head">
+              <h3>Новости проекта</h3>
+              <a href="#news">Все новости</a>
+            </div>
+            <div id="newsList">Загрузка…</div>
+          </div>
+
+          <a class="cta-play" href="#play" id="ctaPlay">
+            ИГРАТЬ НА 01 СЕРВЕРЕ
+            <span class="arrow">→</span>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div class="f-block">
+          <div class="ic">vk</div>
+          <div><small>МЫ ВКОНТАКТЕ</small><b>vk.com/lambadabonus</b></div>
+        </div>
+        <div class="f-block">
+          <div class="ic">DC</div>
+          <div><small>НАШ DISCORD</small><b>discord.gg/lambadabonus</b></div>
+        </div>
+        <div class="f-online">
+          <div class="num" id="totalOnline">—</div>
+          <small>ОНЛАЙН СЕЙЧАС · ИГРОКОВ</small>
+        </div>
+        <div class="f-block">
+          <div><small>СЛЕДИТЕ ЗА НАМИ</small><b>Будьте в курсе всех событий</b></div>
+        </div>
+        <div class="f-copy">
+          <b>LAMBADA BONUS © 2026</b>
+          Все права защищены
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>
