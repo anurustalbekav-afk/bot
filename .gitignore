@@ -1,4 +1,5 @@
-data/
+data/*.json
+data/.htaccess
 .env
 *.log
 .DS_Store
